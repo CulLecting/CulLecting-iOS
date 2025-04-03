@@ -13,7 +13,7 @@ enum LineSpacingStyle {
 }
 
 extension UILabel {
-    static func lineSpacingStyle(style: LineSpacingStyle, text: String) -> NSAttributedString
+    static func setLineSpacing(style: LineSpacingStyle, text: String) -> NSAttributedString
     {
         let paragraphStyle = NSMutableParagraphStyle()
         
