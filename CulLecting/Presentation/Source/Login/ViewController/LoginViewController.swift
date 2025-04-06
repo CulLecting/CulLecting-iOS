@@ -89,7 +89,7 @@ class LoginViewController: UIViewController {
     }()
 
     override func viewDidLoad() {
-        print("뷰 불러와짐")
+        print("LoginViewController DidLoaded")
         super.viewDidLoad()
         view.backgroundColor = .white
         setUI()
@@ -109,12 +109,16 @@ class LoginViewController: UIViewController {
     }
     
     init() {
-        print("init1")
+        print("init LoginViewController")
         super.init(nibName: nil, bundle: nil)
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    deinit {
+        print("deinit LoginViewController")
     }
     
 //MARK: UI
