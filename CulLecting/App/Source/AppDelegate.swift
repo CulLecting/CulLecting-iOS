@@ -15,18 +15,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
-        func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
-            // UIWindow 객체 생성.
-            guard let windowScene = (scene as? UIWindowScene) else { return }
-            let window = UIWindow(windowScene: windowScene)
-            
-            // window 에게 루트 뷰 지정.
-            window.rootViewController = ViewController()
-            
-            // 이 메서드를 반드시 작성해줘야 윈도우가 활성화 됨.
-            window.makeKeyAndVisible()
-            self.window = window
-        }
         return true
     }
 
