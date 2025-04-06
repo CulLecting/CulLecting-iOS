@@ -11,6 +11,7 @@
 		CC3980EF2D951A4500C9103D /* Swinject in Frameworks */ = {isa = PBXBuildFile; productRef = CC3980EE2D951A4500C9103D /* Swinject */; };
 		CC3980F22D951A9300C9103D /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = CC3980F12D951A9300C9103D /* Alamofire */; };
 		CC3980F52D951ADE00C9103D /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = CC3980F42D951ADE00C9103D /* Kingfisher */; };
+		CC3982012DA130F400C9103D /* Then in Frameworks */ = {isa = PBXBuildFile; productRef = CC3982002DA130F400C9103D /* Then */; };
 		CC98547A2D9519C2007397DA /* PinLayout in Frameworks */ = {isa = PBXBuildFile; productRef = CC9854792D9519C2007397DA /* PinLayout */; };
 		CC98547D2D9519D5007397DA /* FlexLayout in Frameworks */ = {isa = PBXBuildFile; productRef = CC98547C2D9519D5007397DA /* FlexLayout */; };
 /* End PBXBuildFile section */
@@ -76,6 +77,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				CC98547A2D9519C2007397DA /* PinLayout in Frameworks */,
+				CC3982012DA130F400C9103D /* Then in Frameworks */,
 				CC3980F22D951A9300C9103D /* Alamofire in Frameworks */,
 				CC98547D2D9519D5007397DA /* FlexLayout in Frameworks */,
 				CC3980EF2D951A4500C9103D /* Swinject in Frameworks */,
@@ -146,6 +148,7 @@
 				CC3980EE2D951A4500C9103D /* Swinject */,
 				CC3980F12D951A9300C9103D /* Alamofire */,
 				CC3980F42D951ADE00C9103D /* Kingfisher */,
+				CC3982002DA130F400C9103D /* Then */,
 			);
 			productName = CulLecting;
 			productReference = CC2E99782D9287B2000B1476 /* CulLecting.app */;
@@ -235,6 +238,7 @@
 				CC3980ED2D951A4500C9103D /* XCRemoteSwiftPackageReference "Swinject" */,
 				CC3980F02D951A9300C9103D /* XCRemoteSwiftPackageReference "Alamofire" */,
 				CC3980F32D951ADE00C9103D /* XCRemoteSwiftPackageReference "Kingfisher" */,
+				CC3981FF2DA130F400C9103D /* XCRemoteSwiftPackageReference "Then" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = CC2E99792D9287B2000B1476 /* Products */;
@@ -630,6 +634,14 @@
 				minimumVersion = 8.3.1;
 			};
 		};
+		CC3981FF2DA130F400C9103D /* XCRemoteSwiftPackageReference "Then" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/devxoul/Then";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.0.0;
+			};
+		};
 		CC9854782D9519C2007397DA /* XCRemoteSwiftPackageReference "PinLayout" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/layoutBox/PinLayout";
@@ -663,6 +675,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = CC3980F32D951ADE00C9103D /* XCRemoteSwiftPackageReference "Kingfisher" */;
 			productName = Kingfisher;
+		};
+		CC3982002DA130F400C9103D /* Then */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CC3981FF2DA130F400C9103D /* XCRemoteSwiftPackageReference "Then" */;
+			productName = Then;
 		};
 		CC9854792D9519C2007397DA /* PinLayout */ = {
 			isa = XCSwiftPackageProductDependency;
