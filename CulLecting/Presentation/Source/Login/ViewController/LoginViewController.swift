@@ -9,102 +9,96 @@ import UIKit
 
 import FlexLayout
 import PinLayout
+import Then
 
 class LoginViewController: UIViewController {
     
-    private let logo: UILabel = {
-        let logo = UILabel()
-        logo.text = "CulLecting"
-        logo.textColor = .black
-        logo.font = .systemFont(ofSize: 36, weight: .bold)
-        return logo
-    }()
+    private let logo = UIImageView().then {
+        $0.image = UIImage.topLogo
+    }
     
-    private let loginLabel: UILabel = {
-        let label = UILabel()
-        label.text = "로그인"
-        label.textColor = .darkGray
-        label.font = .systemFont(ofSize: 24, weight: .light)
-        return label
-    }()
+    private let loginLabel = UILabel().then {
+        $0.text = "로그인"
+        $0.textColor = .grey90
+        $0.font = .fontPretendard(style: .title18SB)
+    }
     
-    private let idTextField: UITextField = {
-        let textField = UITextField()
-        textField.backgroundColor = .systemGray6
-        textField.placeholder = "아이디"
-        textField.textColor = .black
-        textField.font = .systemFont(ofSize: 18)
-        textField.borderStyle = .roundedRect
-        return textField
-    }()
+    private let idTextField = UITextField.makeTextField(style: .defaultStyle, placeholderText: "이메일 입력")
     
-    private let pwTextField: UITextField = {
-        let textField = UITextField()
-        textField.backgroundColor = .systemGray6
-        textField.placeholder = "비밀번호"
-        textField.textColor = .black
-        textField.font = .systemFont(ofSize: 18)
-        textField.borderStyle = .roundedRect
-        return textField
-    }()
+    private lazy var pwTextField = UITextField.makeTextField(style: .defaultStyle, placeholderText: "비밀번호 입력").then {
+        $0.textContentType = .password
+        $0.rightView = hidePwButton
+        $0.rightViewMode = .always
+        $0.isSecureTextEntry = true
+    }
     
-    private let changePwButton: UILabel = {
-        let button = UILabel()
-        button.text = "비밀번호를 잊으셨나요?"
-        button.backgroundColor = .clear
-        button.font = .systemFont(ofSize: 14, weight: .light)
-        button.textColor = .lightGray
+    private lazy var hidePwButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setImage(UIImage.pwEyeSlash, for: .normal)
+        button.tintColor = .grey60
+        button.addAction(UIAction(handler: { [weak self, weak button] _ in
+            guard let self = self, let button = button else { return }
+            self.pwTextField.isSecureTextEntry.toggle()
+            let toggleImg = self.pwTextField.isSecureTextEntry ? "pwEyeSlash" : "pwEye"
+            button.setImage(UIImage(named: toggleImg), for: .normal)
+        }), for: .primaryActionTriggered)
+        // button.imageEdgeInsets = .init(top: 0, left: 0, bottom: 0, right: 10)
         return button
     }()
     
-    private let hidePwButton: UIButton = {
-        let button = UIButton()
-        button.setImage(UIImage(systemName: "loginEye"), for: .normal)
-        button.tintColor = .darkGray
-        return button
-    }()
-    
-    private let loginButton: UIButton = {
-        let button = UIButton(type: .roundedRect)
-        button.setTitle("로그인", for: .normal)
-        button.backgroundColor = .black
-        button.titleLabel?.font = .systemFont(ofSize: 18, weight: .medium)
-        button.setTitleColor(.white, for: .normal)
-        button.titleLabel?.textAlignment = .center
-        button.layer.cornerRadius = 10
-        button.clipsToBounds = true
-        return button
-    }()
+    private let rightPaddingView = UIView(frame: CGRect(x: 0, y: 0, width: 10, height: 44))
 
-    private let joinButton: UIButton = {
-        let button = UIButton(type: .roundedRect)
-        button.setTitle("회원가입", for: .normal)
-        button.backgroundColor = .darkGray
-        button.titleLabel?.font = .systemFont(ofSize: 18, weight: .medium)
-        button.setTitleColor(.white, for: .normal)
-        button.titleLabel?.textAlignment = .center
-        button.layer.cornerRadius = 10
-        button.clipsToBounds = true
+    private let resetPwButton = UIButton().then {
+        var config = UIButton.Configuration.plain()
+        var attributedContainer = AttributeContainer()
+        attributedContainer.font = UIFont.fontPretendard(style: .body14M)
+        config.attributedTitle = AttributedString("비밀번호 재설정", attributes: attributedContainer)
+        config.baseForegroundColor = .grey80
+        config.imagePlacement = .trailing
+        let imgconfig = UIImage.SymbolConfiguration(pointSize: 10)
+        config.image = UIImage(systemName: "chevron.right", withConfiguration: imgconfig)
+        config.imagePadding = 10
+        $0.configuration = config
+    }
+    
+    private let loginButton = UIButton.makeButton(style: .darkButtonDisabled, title: "로그인", cornerRadius: 10)
+    
+    private let joinLabel = UILabel().then {
+        $0.text = "아직 회원이 아니신가요?"
+        $0.font = .fontPretendard(style: .body14M)
+        $0.textColor = .grey80
+    }
+    
+    private lazy var joinButton: UIButton = {
+        let button = UIButton(type: .system)
+        var config = UIButton.Configuration.plain()
+        var attributedContainer = AttributeContainer()
+        attributedContainer.underlineStyle = .single
+        attributedContainer.font = UIFont.fontPretendard(style: .body14M)
+        config.attributedTitle = AttributedString("회원가입", attributes: attributedContainer)
+        config.baseForegroundColor = .primary50
+        button.configuration = config
+        
+        button.addAction(UIAction(handler: { [weak self] _ in
+            guard let self = self else { return }
+            let joinVC = JoinViewController()
+            self.navigationController?.pushViewController(joinVC, animated: true)
+        }), for: .touchUpInside)
+        
         return button
     }()
-
+    
     override func viewDidLoad() {
         print("LoginViewController DidLoaded")
-        super.viewDidLoad()
         view.backgroundColor = .white
+        super.viewDidLoad()
+        
         setUI()
     }
     
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        loginContainerView.pin.all(view.pin.safeArea)
-        
-        let desiredWidth = loginContainerView.bounds.width * 0.8
-        idTextField.flex.width(desiredWidth)
-        pwTextField.flex.width(desiredWidth)
-        loginButton.flex.width(desiredWidth)
-        joinButton.flex.width(desiredWidth)
-        
+        loginContainerView.pin.all(view.pin.safeArea)        
         loginContainerView.flex.layout()
     }
     
@@ -121,58 +115,63 @@ class LoginViewController: UIViewController {
         print("deinit LoginViewController")
     }
     
-//MARK: UI
+    //MARK: UI
     let loginContainerView = UIView()
     let textFieldSubView = UIView()
-    let buttonSubView = UIView()
+    let joinContainer = UIView()
     
     private func setUI() {
         view.addSubview(loginContainerView)
         
-        loginContainerView.flex.direction(.column).define { flex in
-            
-            flex.addItem(logo)
-                .marginTop(200)
-                .marginBottom(50)
-                .alignSelf(.center)
-            
-//            flex.addItem(loginLabel)
-//                .marginBottom(20)
-//                .alignSelf(.center)
-            
-            textFieldSubView.flex.direction(.column).define { flex in
-                flex.addItem(idTextField)
-                    .height(44)
+        loginContainerView
+            .flex
+            .direction(.column)
+            .marginHorizontal(20)
+            .define {
+                $0.addItem(logo)
+                    .marginTop(100)
+                    .marginBottom(40)
                     .alignSelf(.center)
-                    .marginBottom(10)
-                flex.addItem(pwTextField)
-                    .height(44)
+                
+                $0.addItem(loginLabel)
+                    .marginBottom(50)
                     .alignSelf(.center)
+                
+                textFieldSubView
+                    .flex
+                    .direction(.column)
+                    .define {
+                        $0.addItem(idTextField)
+                            .height(56)
+                            .marginBottom(10)
+                        $0.addItem(pwTextField)
+                            .height(56)
+                    }
+                
+                $0.addItem(textFieldSubView)
+                    .marginBottom(20)
+                
+                $0.addItem(resetPwButton)
+                    .marginBottom(20)
+                    .alignSelf(.end)
+                
+                $0.addItem(loginButton)
+                    .marginBottom(20)
+                    .height(56)
+                
+                $0.addItem().grow(1)
+                
+                joinContainer
+                    .flex
+                    .direction(.row)
+                    .alignItems(.center)
+                    .define {
+                        $0.addItem(joinLabel)
+                        $0.addItem(joinButton)
+                    }
+                $0.addItem(joinContainer)
+                    .alignSelf(.center)
+                    .marginBottom(20)
             }
-            
-            flex.addItem(textFieldSubView)
-                .marginBottom(40)
-                .alignSelf(.center)
-            
-            buttonSubView.flex.direction(.column).define { flex in
-                flex.addItem(loginButton)
-                    .height(48)
-                    .alignSelf(.center)
-                    .marginBottom(10)
-                flex.addItem(joinButton)
-                    .height(48)
-                    .alignSelf(.center)
-            }
-            
-            flex.addItem(buttonSubView)
-                .marginBottom(20)
-            
-            flex.addItem(changePwButton)
-                .alignSelf(.center)
-            
-        }
     }
-
-
 }
-

@@ -1,17 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "eye.png",
+      "filename" : "tick-circle.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "eye@2x.png",
+      "filename" : "tick-circle@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "eye@3x.png",
+      "filename" : "tick-circle@3x.png",
       "idiom" : "universal",
       "scale" : "3x"
     }

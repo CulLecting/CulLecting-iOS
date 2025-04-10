@@ -88,7 +88,7 @@ class DefaultAppCoordinator: DefaultAppCoordinatorProtocol {
     
     /// UINavigationContoller의 NavigationBar 설정
     func setNavigationBar() {
-        navigationController.setNavigationBarHidden(true, animated: true)
+        navigationController.setNavigationBarHidden(false, animated: true)
     }
     
 }

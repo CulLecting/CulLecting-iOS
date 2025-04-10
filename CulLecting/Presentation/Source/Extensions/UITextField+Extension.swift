@@ -24,11 +24,11 @@ extension UITextField {
         switch style {
         case .defaultStyle:
             placeHolderColor = .grey50
-            backgroundColor = .grey10
-            borderColor = UIColor.grey10.cgColor
+            backgroundColor = .grey20
+            borderColor = UIColor.grey20.cgColor
         case .wrongInputStyle:
             placeHolderColor = .grey50
-            backgroundColor = .grey10
+            backgroundColor = .grey20
             borderColor = UIColor.primaryShade60.cgColor
         case .disabledStyle:
             placeHolderColor = .grey50
@@ -43,11 +43,16 @@ extension UITextField {
                 textField.attributedPlaceholder = attributedText
             }
             textField.backgroundColor = backgroundColor
-            textField.borderStyle = .roundedRect
             textField.layer.borderColor = borderColor
             textField.layer.borderWidth = 1
+            textField.layer.cornerRadius = 10
             return textField
         }()
+        
+        let leftPaddingView = UIView(frame: CGRect(x: 0, y: 0, width: 10, height: 44))
+        leftPaddingView.backgroundColor = .clear
+        textField.leftView = leftPaddingView
+        textField.leftViewMode = .always
         
         return textField
     }
