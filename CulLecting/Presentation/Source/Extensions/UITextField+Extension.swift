@@ -39,7 +39,7 @@ extension UITextField {
         let textField: UITextField = {
             let textField = UITextField()
             if let text = placeholderText {
-                let attributedText = NSAttributedString(string: text, attributes: [.foregroundColor: placeHolderColor])
+                let attributedText = NSAttributedString(string: text, attributes: [.foregroundColor: placeHolderColor, .font: UIFont.fontPretendard(style: .body14R)])
                 textField.attributedPlaceholder = attributedText
             }
             textField.backgroundColor = backgroundColor
