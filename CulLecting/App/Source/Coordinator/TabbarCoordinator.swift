@@ -55,7 +55,7 @@ public final class TabbarCoordinator: Coordinator {
         searchVC.tabBarItem = UITabBarItem(title: "검색", image: UIImage.tabbarSearch, tag: 2)
         
         let myPageVC = dependency.injector.resolve(MyPageViewController.self) ?? UIViewController()
-        myPageVC.view.backgroundColor = .systemPurple
+        //myPageVC.view.backgroundColor = .systemPurple
         myPageVC.tabBarItem = UITabBarItem(title: "마이", image: UIImage.tabbarMyPage, tag: 3)
         
         tabBarController.viewControllers = [homeVC, archivingVC, searchVC, myPageVC]

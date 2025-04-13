@@ -12,7 +12,7 @@ import Swinject
 public struct MyPageAssembly: Assembly {
     public func assemble(container: Container) {
         container.register(MyPageViewController.self) { _ in
-            MyPageViewController()
+            return MyPageViewController()
         }
     }
 }
