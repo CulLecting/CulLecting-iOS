@@ -11,6 +11,8 @@ import Swinject
 
 public struct HomeAssembly: Assembly {
     public func assemble(container: Container) {
-
+        container.register(HomeViewController.self) { _ in
+            return HomeViewController()
+        }
     }
 }

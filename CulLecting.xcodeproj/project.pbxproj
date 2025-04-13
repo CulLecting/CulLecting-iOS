@@ -12,6 +12,8 @@
 		CC3980F22D951A9300C9103D /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = CC3980F12D951A9300C9103D /* Alamofire */; };
 		CC3980F52D951ADE00C9103D /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = CC3980F42D951ADE00C9103D /* Kingfisher */; };
 		CC3982012DA130F400C9103D /* Then in Frameworks */ = {isa = PBXBuildFile; productRef = CC3982002DA130F400C9103D /* Then */; };
+		CC7E24D02DAA908E00397F76 /* RxCocoa in Frameworks */ = {isa = PBXBuildFile; productRef = CC7E24CF2DAA908E00397F76 /* RxCocoa */; };
+		CC7E24D22DAA908E00397F76 /* RxSwift in Frameworks */ = {isa = PBXBuildFile; productRef = CC7E24D12DAA908E00397F76 /* RxSwift */; };
 		CC98547A2D9519C2007397DA /* PinLayout in Frameworks */ = {isa = PBXBuildFile; productRef = CC9854792D9519C2007397DA /* PinLayout */; };
 		CC98547D2D9519D5007397DA /* FlexLayout in Frameworks */ = {isa = PBXBuildFile; productRef = CC98547C2D9519D5007397DA /* FlexLayout */; };
 /* End PBXBuildFile section */
@@ -79,8 +81,10 @@
 				CC98547A2D9519C2007397DA /* PinLayout in Frameworks */,
 				CC3982012DA130F400C9103D /* Then in Frameworks */,
 				CC3980F22D951A9300C9103D /* Alamofire in Frameworks */,
+				CC7E24D02DAA908E00397F76 /* RxCocoa in Frameworks */,
 				CC98547D2D9519D5007397DA /* FlexLayout in Frameworks */,
 				CC3980EF2D951A4500C9103D /* Swinject in Frameworks */,
+				CC7E24D22DAA908E00397F76 /* RxSwift in Frameworks */,
 				CC3980F52D951ADE00C9103D /* Kingfisher in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -149,6 +153,8 @@
 				CC3980F12D951A9300C9103D /* Alamofire */,
 				CC3980F42D951ADE00C9103D /* Kingfisher */,
 				CC3982002DA130F400C9103D /* Then */,
+				CC7E24CF2DAA908E00397F76 /* RxCocoa */,
+				CC7E24D12DAA908E00397F76 /* RxSwift */,
 			);
 			productName = CulLecting;
 			productReference = CC2E99782D9287B2000B1476 /* CulLecting.app */;
@@ -239,6 +245,7 @@
 				CC3980F02D951A9300C9103D /* XCRemoteSwiftPackageReference "Alamofire" */,
 				CC3980F32D951ADE00C9103D /* XCRemoteSwiftPackageReference "Kingfisher" */,
 				CC3981FF2DA130F400C9103D /* XCRemoteSwiftPackageReference "Then" */,
+				CC7E24CE2DAA908E00397F76 /* XCRemoteSwiftPackageReference "RxSwift" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = CC2E99792D9287B2000B1476 /* Products */;
@@ -642,6 +649,14 @@
 				minimumVersion = 3.0.0;
 			};
 		};
+		CC7E24CE2DAA908E00397F76 /* XCRemoteSwiftPackageReference "RxSwift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ReactiveX/RxSwift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 6.9.0;
+			};
+		};
 		CC9854782D9519C2007397DA /* XCRemoteSwiftPackageReference "PinLayout" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/layoutBox/PinLayout";
@@ -680,6 +695,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = CC3981FF2DA130F400C9103D /* XCRemoteSwiftPackageReference "Then" */;
 			productName = Then;
+		};
+		CC7E24CF2DAA908E00397F76 /* RxCocoa */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CC7E24CE2DAA908E00397F76 /* XCRemoteSwiftPackageReference "RxSwift" */;
+			productName = RxCocoa;
+		};
+		CC7E24D12DAA908E00397F76 /* RxSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CC7E24CE2DAA908E00397F76 /* XCRemoteSwiftPackageReference "RxSwift" */;
+			productName = RxSwift;
 		};
 		CC9854792D9519C2007397DA /* PinLayout */ = {
 			isa = XCSwiftPackageProductDependency;

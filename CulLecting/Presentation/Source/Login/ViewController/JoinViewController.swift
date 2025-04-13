@@ -32,14 +32,7 @@ class JoinViewController: UIViewController {
         $0.textColor = .grey80
     }
     
-    private let termsConfirmButton = UIButton().then {
-        guard let text = $0.titleLabel?.text else { return }
-        let attributedString = NSMutableAttributedString(string: text)
-        attributedString.addAttribute(.underlineStyle, value: NSUnderlineStyle.single.rawValue, range: NSRange(location: 0, length: attributedString.length))
-        $0.setTitle("확인하기", for: .normal)
-        $0.titleLabel?.font = UIFont.fontPretendard(style: .body14R)
-        $0.setTitleColor(.primary50, for: .normal)
-    }
+    private let termsConfirmButton = UIButton.makeTextButton(title: "확인하기", titleColor: .primary50, font: .fontPretendard(style: .body14M), underline: .underlineTrue)
     
     private let nextButton = UIButton.makeButton(style: .darkButtonDisabled, title: "다음", cornerRadius: 28)
 

@@ -44,7 +44,7 @@ public final class TabbarCoordinator: Coordinator {
     public func start() {
         // DI Container를 사용하여 resolve
         let homeVC = dependency.injector.resolve(HomeViewController.self) ?? UIViewController()
-        homeVC.tabBarItem = UITabBarItem(title: "홈", image: UIImage.tabbarHome, tag: 0)
+        homeVC.tabBarItem = UITabBarItem(title: "홈", image: UIImage.tabbarHome , tag: 0)
         
         let archivingVC = UIViewController()
         archivingVC.view.backgroundColor = .systemGreen
@@ -59,6 +59,12 @@ public final class TabbarCoordinator: Coordinator {
         myPageVC.tabBarItem = UITabBarItem(title: "마이", image: UIImage.tabbarMyPage, tag: 3)
         
         tabBarController.viewControllers = [homeVC, archivingVC, searchVC, myPageVC]
+        setTabbar()
         navigationController.setViewControllers([tabBarController], animated: false)
+    }
+    
+    private func setTabbar() {
+        tabBarController.tabBar.backgroundColor = .white
+        tabBarController.tabBar.tintColor = .primary50
     }
 }
