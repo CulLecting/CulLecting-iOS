@@ -61,7 +61,7 @@ class LoginViewController: UIViewController {
         $0.configuration = config
     }
     
-    private let loginButton = UIButton.makeButton(style: .darkButtonDisabled, title: "로그인", cornerRadius: 10)
+    private let loginButton = UIButton.makeButton(style: .darkButtonDisabled, title: "로그인", cornerRadius: 28)
     
     private let joinLabel = UILabel().then {
         $0.text = "아직 회원이 아니신가요?"
@@ -69,24 +69,13 @@ class LoginViewController: UIViewController {
         $0.textColor = .grey80
     }
     
-    private lazy var joinButton: UIButton = {
-        let button = UIButton(type: .system)
-        var config = UIButton.Configuration.plain()
-        var attributedContainer = AttributeContainer()
-        attributedContainer.underlineStyle = .single
-        attributedContainer.font = UIFont.fontPretendard(style: .body14M)
-        config.attributedTitle = AttributedString("회원가입", attributes: attributedContainer)
-        config.baseForegroundColor = .primary50
-        button.configuration = config
-        
-        button.addAction(UIAction(handler: { [weak self] _ in
+    private lazy var joinButton = UIButton.makeTextButton(title: "회원가입", titleColor: .primary50, font: .fontPretendard(style: .body14M), underline: .underlineTrue).then {
+        $0.addAction(UIAction(handler: { [weak self] _ in
             guard let self = self else { return }
             let joinVC = JoinViewController()
             self.navigationController?.pushViewController(joinVC, animated: true)
         }), for: .touchUpInside)
-        
-        return button
-    }()
+    }
     
     override func viewDidLoad() {
         print("LoginViewController DidLoaded")
@@ -168,6 +157,7 @@ class LoginViewController: UIViewController {
                     .define {
                         $0.addItem(joinLabel)
                         $0.addItem(joinButton)
+                            .marginLeft(10)
                     }
                 $0.addItem(joinContainer)
                     .alignSelf(.center)

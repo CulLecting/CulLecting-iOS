@@ -11,6 +11,8 @@ import Swinject
 
 public struct SearchAssembly: Assembly {
     public func assemble(container: Container) {
-
+        container.register(SearchViewController.self) { _ in
+            return SearchViewController()
+        }
     }
 }

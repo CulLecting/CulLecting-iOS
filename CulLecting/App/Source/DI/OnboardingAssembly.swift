@@ -11,9 +11,8 @@ import Swinject
 
 public struct OnboardingAssembly: Assembly {
     public func assemble(container: Container) {
-        container.register(OnboardingViewController.self) { _ in
-            OnboardingViewController()
+        container.register(OnboardingCoordinator.self) { (resolver, navigationController: UINavigationController) in
+            return OnboardingCoordinator(navigationController: navigationController)
         }
-        
     }
 }

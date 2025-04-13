@@ -19,7 +19,7 @@ extension UIViewController {
         let toastView = CustomToastView(message: message, iconStyle: iconStyle)
         
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene else { return }
-        var toastWindow = UIWindow(windowScene: windowScene)
+        let toastWindow = UIWindow(windowScene: windowScene)
         toastWindow.backgroundColor = .clear
         toastWindow.windowLevel = .alert
         toastWindow.isUserInteractionEnabled = false

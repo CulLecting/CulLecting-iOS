@@ -31,8 +31,8 @@ class DefaultAppCoordinator: DefaultAppCoordinatorProtocol {
     public weak var finishDelegate: CoordinatorFinishDelegate?
     
     // 구현 필요
-    private var haveToken: Bool = false
-    private var hasSeenOnboarding: Bool = false
+    private var haveToken: Bool = true
+    private var hasSeenOnboarding: Bool = true
     
     public init(dependency: Dependency) {
         self.dependency = dependency
@@ -45,6 +45,7 @@ class DefaultAppCoordinator: DefaultAppCoordinatorProtocol {
     }
     
     func showLoginFlow() {
+        print("showLoginFlow 실행됨")
         // DI Container를 통해 LoginCoordinator 생성
         guard let loginCoordinator = dependency.injector.resolve(LoginCoordinator.self, argument: navigationController) else { return }
         loginCoordinator.parentCoordinator = self
@@ -53,6 +54,7 @@ class DefaultAppCoordinator: DefaultAppCoordinatorProtocol {
     }
     
     func showOnboardingFlow() {
+        print("showOnboardingFlow 실행됨")
         guard let onboardingCoordinator = dependency.injector.resolve(OnboardingCoordinator.self, argument: navigationController) else { return }
         onboardingCoordinator.parentCoordinator = self
         childCoordinators.append(onboardingCoordinator)
@@ -61,6 +63,7 @@ class DefaultAppCoordinator: DefaultAppCoordinatorProtocol {
     
     /// 탭바 컨트롤러 플로우
     func showTabbarFlow() {
+        print("ShowTabbarFlow 실행됨")
         if getChildCoordinator(.tabbar) == nil {
             setTabbarCoordinator()
         }
@@ -71,7 +74,9 @@ class DefaultAppCoordinator: DefaultAppCoordinatorProtocol {
     
     /// 탭바 컨트롤러 세팅, 자식 코디네이터로 등록
     func setTabbarCoordinator() {
-        guard let tabbarCoordinator = dependency.injector.resolve(TabbarCoordinator.self, argument: navigationController) else { return }
+        guard let tabbarCoordinator = dependency.injector.resolve(TabbarCoordinator.self, argument: navigationController) else {
+            fatalError("TabbarCoordinator Resolve 실패")
+        }
         tabbarCoordinator.parentCoordinator = self
         childCoordinators.append(tabbarCoordinator)
     }
@@ -95,22 +100,18 @@ class DefaultAppCoordinator: DefaultAppCoordinatorProtocol {
 
 /// 자식 코디네이터가 종료되었을 때 실행할 메서드
 extension DefaultAppCoordinator: CoordinatorFinishDelegate {
-    
     func coordinatorDidFinish(childCoordinator: Coordinator) {
+        print("coordinatorDidFinish() 호출됨")
         self.childCoordinators = self.childCoordinators.filter { $0.type != childCoordinator.type }
+        print("OnboardingFinish - TabbarFlowStart")
+        showTabbarFlow()
     }
-
 }
 
 /// 이벤트 처리
 extension DefaultAppCoordinator {
     public func didLoggedIn() {
         hasSeenOnboarding ? showTabbarFlow() : showOnboardingFlow()
-    }
-    
-    public func didFinishedOnboarding() {
-        hasSeenOnboarding = true
-        showTabbarFlow()
     }
     
     public func didLoggedOut() {

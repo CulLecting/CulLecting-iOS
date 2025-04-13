@@ -1,19 +1,18 @@
 //
-//  OnboardingViewController.swift
+//  ArchiveViewController.swift
 //  CulLecting
 //
-//  Created by 김승희 on 4/7/25.
+//  Created by 김승희 on 4/13/25.
 //
 
 
 import UIKit
 
 
-class OnboardingViewController: UIViewController {
-
+class ArchiveViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .systemPink
+        view.backgroundColor = .systemBlue
     }
     
     init() {
@@ -23,6 +22,4 @@ class OnboardingViewController: UIViewController {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
 }
-

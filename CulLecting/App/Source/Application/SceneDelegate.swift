@@ -29,7 +29,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         let navigationController = UINavigationController()
         
         window.rootViewController = navigationController
-        window.makeKeyAndVisible()
         
         // AppCoordinatorProtocol 타입의 객체를 resolve, 미리 AppAssembly에 등록한 AppCoordinator 구현체를 찾아서 생성
         // navigationController, window를 인자로 전달하여 화면 전환 및 윈도우 관리에 필요한 의존성을 주입받음
@@ -39,6 +38,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         self.appCoordinator = appCoordinator
         // AppCoordinator의 start() 메서드를 호출하여 앱의 초기 플로우를 실행함 (로그인/온보딩/탭바)
         appCoordinator.start()
+        window.makeKeyAndVisible()
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {
