@@ -27,7 +27,10 @@ public class MyPageViewController: UIViewController {
     }
     private let chevronImg = UIImageView(image: UIImage(systemName: "chevron.right")).then {
         $0.tintColor = .grey90
+        $0.contentMode = .scaleAspectFit
     }
+    
+    private let myInfoEditView = UIView()
     
     private let MypageMenuTableView = UITableView().then {
         $0.backgroundColor = .clear
@@ -42,8 +45,9 @@ public class MyPageViewController: UIViewController {
     
     public override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .grey20
+        view.backgroundColor = .grey10
         setUI()
+        setGesture()
     }
     
     init() {
@@ -62,12 +66,20 @@ public class MyPageViewController: UIViewController {
     }
     
     //MARK: 기타 메서드
-
+    private func setGesture() {
+        let tapMyInfoEditGesture = UITapGestureRecognizer(target: self, action: #selector(moveToEditInfoVC))
+        myInfoEditView.addGestureRecognizer(tapMyInfoEditGesture)
+        myInfoEditView.isUserInteractionEnabled = true
+    }
+    
+    @objc private func moveToEditInfoVC() {
+        let editVC = EditInfoViewController()
+        navigationController?.pushViewController(editVC, animated: true)
+    }
     
     //MARK: UI
     private let container = UIView()
     private let myInfoView = UIView()
-    private let myInfoEditView = UIView()
     
     private func setUI() {
         view.addSubview(container)

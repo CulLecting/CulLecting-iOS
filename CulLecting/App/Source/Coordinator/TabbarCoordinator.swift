@@ -46,8 +46,8 @@ public final class TabbarCoordinator: Coordinator {
         let homeVC = dependency.injector.resolve(HomeViewController.self) ?? UIViewController()
         homeVC.tabBarItem = UITabBarItem(title: "홈", image: UIImage.tabbarHome , tag: 0)
         
-        let archivingVC = UIViewController()
-        archivingVC.view.backgroundColor = .systemGreen
+        let archivingVC = dependency.injector.resolve(ArchiveViewController.self) ?? UIViewController()
+        //archivingVC.view.backgroundColor = .systemGreen
         archivingVC.tabBarItem = UITabBarItem(title: "내 기록", image: UIImage.tabbarArchive, tag: 1)
         
         let searchVC = UIViewController()
@@ -56,7 +56,7 @@ public final class TabbarCoordinator: Coordinator {
         
         let myPageVC = dependency.injector.resolve(MyPageViewController.self) ?? UIViewController()
         //myPageVC.view.backgroundColor = .systemPurple
-        myPageVC.tabBarItem = UITabBarItem(title: "마이", image: UIImage.tabbarMyPage, tag: 3)
+        myPageVC.tabBarItem = UITabBarItem(title: "마이", image: UIImage.tabbarMypage, tag: 3)
         
         tabBarController.viewControllers = [homeVC, archivingVC, searchVC, myPageVC]
         setTabbar()
@@ -66,5 +66,10 @@ public final class TabbarCoordinator: Coordinator {
     private func setTabbar() {
         tabBarController.tabBar.backgroundColor = .white
         tabBarController.tabBar.tintColor = .primary50
+        tabBarController.tabBar.layer.shadowColor = UIColor.black.cgColor
+        tabBarController.tabBar.layer.shadowOpacity = 0.1
+        tabBarController.tabBar.layer.shadowOffset = CGSize(width: 0, height: -2)
+        tabBarController.tabBar.layer.shadowRadius = 4
+        tabBarController.tabBar.layer.masksToBounds = false
     }
 }

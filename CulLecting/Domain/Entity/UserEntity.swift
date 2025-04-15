@@ -6,6 +6,9 @@
 //
 
 public struct UserEntity {
+    let id: String
     let email: String
     let nickName: String
+    let location: [String]?
+    let category: [String]?
 }
