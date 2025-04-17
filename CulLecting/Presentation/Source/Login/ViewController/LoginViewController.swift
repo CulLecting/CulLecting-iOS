@@ -9,10 +9,16 @@ import UIKit
 
 import FlexLayout
 import PinLayout
+import RxCocoa
+import RxSwift
 import Then
 
 class LoginViewController: UIViewController {
     
+    private let viewModel: LoginViewModel
+    private let disposeBag = DisposeBag()
+    
+    //MARK: UI Components
     private let logo = UIImageView().then {
         $0.image = UIImage.topLogo
     }
@@ -77,12 +83,13 @@ class LoginViewController: UIViewController {
         }), for: .touchUpInside)
     }
     
+    //MARK: LifeCycle
     override func viewDidLoad() {
         print("LoginViewController DidLoaded")
         view.backgroundColor = .white
         super.viewDidLoad()
-        
         setUI()
+        bindViewModel()
     }
     
     override func viewDidLayoutSubviews() {
@@ -91,8 +98,8 @@ class LoginViewController: UIViewController {
         loginContainerView.flex.layout()
     }
     
-    init() {
-        print("init LoginViewController")
+    init(viewModel: LoginViewModel) {
+        self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -102,6 +109,30 @@ class LoginViewController: UIViewController {
     
     deinit {
         print("deinit LoginViewController")
+    }
+    
+    //MARK: ViewModel Bind
+    private func bindViewModel() {
+        let input = LoginViewModel.Input(
+            email: idTextField.rx.text.orEmpty.asObservable(),
+            password: pwTextField.rx.text.orEmpty.asObservable(),
+            loginTap: loginButton.rx.tap.asObservable()
+        )
+        
+        let output = viewModel.transform(input: input)
+        
+        output.loginResult
+            .drive(onNext: { result in
+                switch result {
+                case .success(let token):
+                    print("✅ 로그인 성공: \(token)")
+                    // 토큰 저장 및 화면 전환 등
+                case .failure(let error):
+                    print("❌ 로그인 실패: \(error.localizedDescription)")
+                    // 에러 처리 UI
+                }
+            })
+            .disposed(by: disposeBag)
     }
     
     //MARK: UI
