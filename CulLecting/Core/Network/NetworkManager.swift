@@ -70,5 +70,4 @@ final class NetworkManager {
     }
 }
 
-
 private struct EmptyDecodable: Decodable {}

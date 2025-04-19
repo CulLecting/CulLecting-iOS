@@ -13,7 +13,7 @@ public struct AppAssembly: Assembly {
         // 각 모듈별 Assembly를 호출하여 컨테이너에 등록
         DataAssembly().assemble(container: container)
         DomainAssembly().assemble(container: container)
-        AuthAssembly().assemble(container: container)
+        LoginAssembly().assemble(container: container)
         OnboardingAssembly().assemble(container: container)
         HomeAssembly().assemble(container: container)
         ArchiveAssembly().assemble(container: container)

@@ -14,6 +14,7 @@ import RxSwift
 import Then
 
 class LoginViewController: UIViewController {
+    weak var coordinator: LoginCoordinatorProtocol?
     
     private let viewModel: LoginViewModel
     private let disposeBag = DisposeBag()
@@ -75,11 +76,15 @@ class LoginViewController: UIViewController {
         $0.textColor = .grey80
     }
     
-    private lazy var joinButton = UIButton.makeTextButton(title: "회원가입", titleColor: .primary50, font: .fontPretendard(style: .body14M), underline: .underlineTrue).then {
+    private lazy var joinButton = UIButton.makeTextButton(
+        title: "회원가입",
+        titleColor: .primary50,
+        font: .fontPretendard(style: .body14M),
+        underline: .underlineTrue
+    ).then {
         $0.addAction(UIAction(handler: { [weak self] _ in
-            guard let self = self else { return }
-            let joinVC = JoinViewController()
-            self.navigationController?.pushViewController(joinVC, animated: true)
+            print("회원가입 버튼 눌림")
+            self?.coordinator?.showJoinView()
         }), for: .touchUpInside)
     }
     
@@ -98,8 +103,9 @@ class LoginViewController: UIViewController {
         loginContainerView.flex.layout()
     }
     
-    init(viewModel: LoginViewModel) {
+    init(viewModel: LoginViewModel, coordinator: LoginCoordinatorProtocol?) {
         self.viewModel = viewModel
+        self.coordinator = coordinator
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -125,11 +131,10 @@ class LoginViewController: UIViewController {
             .drive(onNext: { result in
                 switch result {
                 case .success(let token):
-                    print("✅ 로그인 성공: \(token)")
-                    // 토큰 저장 및 화면 전환 등
+                    print("로그인 성공: \(token)")
+                    self.coordinator?.didLoginSuccess()
                 case .failure(let error):
-                    print("❌ 로그인 실패: \(error.localizedDescription)")
-                    // 에러 처리 UI
+                    print("로그인 실패: \(error.localizedDescription)")
                 }
             })
             .disposed(by: disposeBag)

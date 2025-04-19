@@ -5,10 +5,13 @@
 //  Created by 김승희 on 4/7/25.
 //
 
+
 import UIKit
+
 import Swinject
 
-final class AuthAssembly: Assembly {
+
+final class LoginAssembly: Assembly {
     func assemble(container: Container) {
         
         container.register(AuthRepository.self) { _ in
@@ -22,12 +25,16 @@ final class AuthAssembly: Assembly {
         
         container.register(LoginViewModel.self) { r in
             let useCase = r.resolve(AuthUseCase.self)!
-            return LoginViewModel(authUseCase: useCase)
+            return LoginViewModel(useCase: useCase)
         }
         
-        container.register(LoginViewController.self) { r in
-            let viewModel = r.resolve(LoginViewModel.self)!
-            return LoginViewController(viewModel: viewModel)
+        container.register(JoinViewModel.self) { r in
+            let useCase = r.resolve(AuthUseCase.self)!
+            return JoinViewModel(useCase: useCase)
+        }
+        
+        container.register(LoginCoordinator.self) { (r, navigationController: UINavigationController) in
+            return LoginCoordinator(navigationController: navigationController, container: r)
         }
     }
 }

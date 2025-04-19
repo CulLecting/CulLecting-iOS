@@ -11,14 +11,14 @@ import RxSwift
 
 public protocol AuthUsecaseProtocol {
     func login(email: String, password: String) -> Single<TokenDTO>
-    func signup(email: String, password: String, nickname: String) -> Completable
+    func signup(email: String, password: String, nickname: String, token: String) -> Completable
     func fetchUserInfo() -> Single<UserEntity>
     func refreshToken() -> Single<TokenDTO>
     func sendVerificationCode(email: String) -> Completable
     func verifyCode(email: String, code: String) -> Single<String> // 토큰 반환
     func updateOnboarding(location: [String], category: [String]) -> Completable
     func resetPassword(email: String) -> Completable
-    func confirmResetPassword(email: String, newPassword: String) -> Completable
+    func confirmResetPassword(email: String, newPassword: String, token: String) -> Completable
     func changePassword(before: String, new: String) -> Completable
     func logout() -> Completable
     func deleteAccount() -> Completable
@@ -26,6 +26,7 @@ public protocol AuthUsecaseProtocol {
 
 public final class AuthUseCase: AuthUsecaseProtocol {
     private let repository: AuthRepositoryProtocol
+
     public init(repository: AuthRepositoryProtocol) {
         self.repository = repository
     }
@@ -34,8 +35,8 @@ public final class AuthUseCase: AuthUsecaseProtocol {
         repository.login(email: email, password: password)
     }
 
-    public func signup(email: String, password: String, nickname: String) -> Completable {
-        repository.signup(email: email, password: password, nickname: nickname)
+    public func signup(email: String, password: String, nickname: String, token: String) -> Completable {
+        repository.signup(email: email, password: password, nickname: nickname, token: token)
     }
 
     public func fetchUserInfo() -> Single<UserEntity> {
@@ -62,8 +63,8 @@ public final class AuthUseCase: AuthUsecaseProtocol {
         repository.resetPassword(email: email)
     }
 
-    public func confirmResetPassword(email: String, newPassword: String) -> Completable {
-        repository.confirmResetPassword(email: email, newPassword: newPassword)
+    public func confirmResetPassword(email: String, newPassword: String, token: String) -> Completable {
+        repository.confirmResetPassword(email: email, newPassword: newPassword, token: token)
     }
 
     public func changePassword(before: String, new: String) -> Completable {
@@ -78,4 +79,3 @@ public final class AuthUseCase: AuthUsecaseProtocol {
         repository.deleteAccount()
     }
 }
-

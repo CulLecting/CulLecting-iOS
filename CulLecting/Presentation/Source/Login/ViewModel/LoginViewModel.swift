@@ -24,12 +24,12 @@ final class LoginViewModel {
         let loginResult: Driver<Result<TokenDTO, Error>>
     }
 
-    // MARK: - Dependencies
+    // MARK: - 의존성
     private let authUseCase: AuthUseCase
     private let disposeBag = DisposeBag()
 
-    init(authUseCase: AuthUseCase) {
-        self.authUseCase = authUseCase
+    init(useCase: AuthUseCase) {
+        self.authUseCase = useCase
     }
 
     func transform(input: Input) -> Output {
