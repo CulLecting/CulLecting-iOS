@@ -7,11 +7,16 @@
 
 
 import UIKit
+
 import FlexLayout
 import PinLayout
+import RxCocoa
+import RxSwift
 import Then
 
 class JoinViewController: UIViewController {
+    private let viewModel: JoinViewModel
+    private let disposeBag = DisposeBag()
     
     private let emailTextField = UITextField.makeTextField(style: .defaultStyle, placeholderText: "이메일 입력")
     private let emailAuthButton = UIButton.makeButton(style: .darkButtonActive, title: "인증", cornerRadius: 10)
@@ -37,6 +42,15 @@ class JoinViewController: UIViewController {
     private let nextButton = UIButton.makeButton(style: .darkButtonDisabled, title: "다음", cornerRadius: 28)
 
     // MARK: - Life Cycle
+    init(viewModel: JoinViewModel) {
+        self.viewModel = viewModel
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white

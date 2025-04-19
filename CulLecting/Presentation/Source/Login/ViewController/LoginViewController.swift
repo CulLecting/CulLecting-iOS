@@ -9,10 +9,17 @@ import UIKit
 
 import FlexLayout
 import PinLayout
+import RxCocoa
+import RxSwift
 import Then
 
 class LoginViewController: UIViewController {
+    weak var coordinator: LoginCoordinatorProtocol?
     
+    private let viewModel: LoginViewModel
+    private let disposeBag = DisposeBag()
+    
+    //MARK: UI Components
     private let logo = UIImageView().then {
         $0.image = UIImage.topLogo
     }
@@ -69,20 +76,25 @@ class LoginViewController: UIViewController {
         $0.textColor = .grey80
     }
     
-    private lazy var joinButton = UIButton.makeTextButton(title: "회원가입", titleColor: .primary50, font: .fontPretendard(style: .body14M), underline: .underlineTrue).then {
+    private lazy var joinButton = UIButton.makeTextButton(
+        title: "회원가입",
+        titleColor: .primary50,
+        font: .fontPretendard(style: .body14M),
+        underline: .underlineTrue
+    ).then {
         $0.addAction(UIAction(handler: { [weak self] _ in
-            guard let self = self else { return }
-            let joinVC = JoinViewController()
-            self.navigationController?.pushViewController(joinVC, animated: true)
+            print("회원가입 버튼 눌림")
+            self?.coordinator?.showJoinView()
         }), for: .touchUpInside)
     }
     
+    //MARK: LifeCycle
     override func viewDidLoad() {
         print("LoginViewController DidLoaded")
         view.backgroundColor = .white
         super.viewDidLoad()
-        
         setUI()
+        bindViewModel()
     }
     
     override func viewDidLayoutSubviews() {
@@ -91,8 +103,9 @@ class LoginViewController: UIViewController {
         loginContainerView.flex.layout()
     }
     
-    init() {
-        print("init LoginViewController")
+    init(viewModel: LoginViewModel, coordinator: LoginCoordinatorProtocol?) {
+        self.viewModel = viewModel
+        self.coordinator = coordinator
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -102,6 +115,29 @@ class LoginViewController: UIViewController {
     
     deinit {
         print("deinit LoginViewController")
+    }
+    
+    //MARK: ViewModel Bind
+    private func bindViewModel() {
+        let input = LoginViewModel.Input(
+            email: idTextField.rx.text.orEmpty.asObservable(),
+            password: pwTextField.rx.text.orEmpty.asObservable(),
+            loginTap: loginButton.rx.tap.asObservable()
+        )
+        
+        let output = viewModel.transform(input: input)
+        
+        output.loginResult
+            .drive(onNext: { result in
+                switch result {
+                case .success(let token):
+                    print("로그인 성공: \(token)")
+                    self.coordinator?.didLoginSuccess()
+                case .failure(let error):
+                    print("로그인 실패: \(error.localizedDescription)")
+                }
+            })
+            .disposed(by: disposeBag)
     }
     
     //MARK: UI

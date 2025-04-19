@@ -14,6 +14,8 @@ public protocol DefaultAppCoordinatorProtocol: Coordinator {
     func showTabbarFlow()
     func setTabbarCoordinator()
     func getChildCoordinator(_ coordinatorType: CoordinatorType) -> Coordinator?
+    func didLoggedIn()
+    func didLoggedOut()
 }
 
 // 부모 코디네이터: 앱 실행과 동시에 앱에 대한 제어권을 갖는 첫 번째 코디네이터
@@ -31,8 +33,8 @@ class DefaultAppCoordinator: DefaultAppCoordinatorProtocol {
     public weak var finishDelegate: CoordinatorFinishDelegate?
     
     // 구현 필요
-    private var haveToken: Bool = true
-    private var hasSeenOnboarding: Bool = true
+    private var haveToken: Bool = false
+    private var hasSeenOnboarding: Bool = false
     
     public init(dependency: Dependency) {
         self.dependency = dependency
@@ -111,6 +113,7 @@ extension DefaultAppCoordinator: CoordinatorFinishDelegate {
 /// 이벤트 처리
 extension DefaultAppCoordinator {
     public func didLoggedIn() {
+        haveToken = true
         hasSeenOnboarding ? showTabbarFlow() : showOnboardingFlow()
     }
     
