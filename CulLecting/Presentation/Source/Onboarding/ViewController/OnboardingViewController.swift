@@ -17,12 +17,11 @@ import Then
 
 class OnboardingViewController: UIViewController {
     
-    var viewModel = OnboardingViewModel()
-    var onFinishTransition: (() -> Void)?
+    var viewModel: OnboardingViewModel
     private let disposeBag = DisposeBag()
+    var onFinishTransition: (() -> Void)?
     
     //MARK: UI Components
-    
     private let blackLogo = UIImageView().then {
         $0.image = UIImage.cullectingIconBlack.resize(newSize: CGSize(width: 38, height: 32))
         $0.contentMode = .scaleAspectFit
@@ -73,8 +72,8 @@ class OnboardingViewController: UIViewController {
         bind()
     }
     
-    init() {
-        print("OnboardingViewController init됨")
+    init(viewModel: OnboardingViewModel) {
+        self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -97,6 +96,7 @@ class OnboardingViewController: UIViewController {
     //MARK: RX + bind
     private let nextTrigger = PublishSubject<Void>()
     private let backTrigger = PublishSubject<Void>()
+    private let skipTrigger = PublishSubject<Void>()
     private let categoryButtonTapRelay = PublishSubject<String>()
     private let locationButtonTapRelay = PublishSubject<String>()
     
@@ -104,6 +104,7 @@ class OnboardingViewController: UIViewController {
     private func bindViewModel() {
         let input = OnboardingViewModel.Input(nextTrigger: nextTrigger.asObservable(),
                                               backTrigger: backTrigger.asObservable(),
+                                              skipTrigger: skipTrigger.asObservable(),
                                               tapCategory: categoryButtonTapRelay.asObservable(),
                                               tapLocation: locationButtonTapRelay.asObservable()
         )
@@ -208,6 +209,10 @@ class OnboardingViewController: UIViewController {
         
         backButton.rx.tap
             .bind(to: backTrigger)
+            .disposed(by: disposeBag)
+        
+        skipButton.rx.tap
+            .bind(to: skipTrigger)
             .disposed(by: disposeBag)
     }
     

@@ -11,7 +11,7 @@ import UIKit
 import Swinject
 
 
-final class LoginAssembly: Assembly {
+struct LoginAssembly: Assembly {
     func assemble(container: Container) {
         
         container.register(AuthRepository.self) { _ in

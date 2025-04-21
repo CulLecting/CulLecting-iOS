@@ -12,6 +12,7 @@ import Security
 
 final class TokenStorage {
     //싱글톤으로 선언
+    // 외부에서 가져다 쓸 때, TokenStorage의 내부가 Keychain인지 뭔지 신경 쓸 필요 없다.
     static let shared = TokenStorage()
     //싱글톤으로 선언했기 때문에, 외부에서 새로운 객체를 만들지 못하도록 막음.
     private init() {}
@@ -22,8 +23,27 @@ final class TokenStorage {
     }
     
     //MARK: 토큰별 접근 편의 프로퍼티
-    var accessToken: String? { load(key: .accessToken) }
-    var refreshToken: String? { load(key: .refreshToken) }
+    var accessToken: String? {
+        get { load(key: .accessToken) }
+        set {
+            if let value = newValue {
+                save(value: value, key: .accessToken)
+            } else {
+                delete(key: .accessToken)
+            }
+        }
+    }
+    
+    var refreshToken: String? {
+        get { load(key: .refreshToken) }
+        set {
+            if let value = newValue {
+                save(value: value, key: .refreshToken)
+            } else {
+                delete(key: .refreshToken)
+            }
+        }
+    }
     
     //MARK: 메서드
     func save(value: String, key: Key) {

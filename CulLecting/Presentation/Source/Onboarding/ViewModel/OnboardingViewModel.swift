@@ -17,21 +17,21 @@ enum OnboardingStep {
     case category
 }
 
-protocol OnboardingViewModelType {
+protocol OnboardingViewModelProtocol {
     func transform(input: OnboardingViewModel.Input) -> OnboardingViewModel.Output
 }
 
-final class OnboardingViewModel: OnboardingViewModelType {
-    private let disposeBag = DisposeBag()
+final class OnboardingViewModel: OnboardingViewModelProtocol {
     
-    //MARK: Struct Input Output
+    //MARK: Input Output
     struct Input {
         let nextTrigger: Observable<Void>
         let backTrigger: Observable<Void>
+        let skipTrigger: Observable<Void>
         let tapCategory: Observable<String>
         let tapLocation: Observable<String>
     }
-        
+    
     struct Output {
         let currentStep: Observable<OnboardingStep>
         let selectedCategories: Observable<Set<String>>
@@ -43,27 +43,34 @@ final class OnboardingViewModel: OnboardingViewModelType {
     }
     
     //MARK: 선언
+    private let disposeBag = DisposeBag()
     private let currentStepRelay = BehaviorRelay<OnboardingStep>(value: .location)
-    private let selectedCategories = BehaviorRelay<Set<String>>(value: [])
-    private let selectedLocations = BehaviorRelay<Set<String>>(value: [])
+    private let selectedCategoriesRelay = BehaviorRelay<Set<String>>(value: [])
+    private let selectedLocationsRelay = BehaviorRelay<Set<String>>(value: [])
     private let finishSubject = PublishSubject<Bool>()
     private let progressRelay = BehaviorRelay<Float>(value: 0.5)
     
+    //MARK: init
+    private let useCase: OnboardingUseCaseProtocol
+    
+    init(useCase: OnboardingUseCaseProtocol) {
+        self.useCase = useCase
+    }
     
     //MARK: transform
     func transform(input: Input) -> Output {
         input.nextTrigger
             .subscribe(onNext: { [weak self] in
                 guard let self = self else { return }
-                print("nextTrigger 발생, selectedLocations: \(self.selectedLocations.value), selectedCategories: \(self.selectedCategories.value)")
+                print("nextTrigger 발생, selectedLocations: \(self.selectedLocationsRelay.value), selectedCategories: \(self.selectedCategoriesRelay.value)")
                 switch self.currentStepRelay.value {
                 case .location:
-                    if self.selectedLocations.value.count >= 1 {
+                    if self.selectedLocationsRelay.value.count >= 1 {
                         self.currentStepRelay.accept(.category)
                         self.progressRelay.accept(1.0)
                     }
                 case .category:
-                    if self.selectedCategories.value.count >= 1 {
+                    if self.selectedCategoriesRelay.value.count >= 1 {
                         self.finishSubject.onNext(true)
                     }
                 }
@@ -80,8 +87,16 @@ final class OnboardingViewModel: OnboardingViewModelType {
             })
             .disposed(by: disposeBag)
         
+        input.skipTrigger
+            .subscribe(onNext: { [weak self] in
+                guard let self else { return }
+                UserDefaults.standard.set(true, forKey: "hasSeenOnboarding")
+                self.finishSubject.onNext(true)
+            })
+            .disposed(by: disposeBag)
+        
         input.tapLocation
-            .withLatestFrom(selectedLocations) { tapped, current in
+            .withLatestFrom(selectedLocationsRelay) { tapped, current in
                 var new = current
                 print("tapped: \(tapped), new.count: \(new.count)")
                 if new.contains(tapped) {
@@ -91,11 +106,11 @@ final class OnboardingViewModel: OnboardingViewModelType {
                 }
                 return new
             }
-            .bind(to: selectedLocations)
+            .bind(to: selectedLocationsRelay)
             .disposed(by: disposeBag)
         
         input.tapCategory
-            .withLatestFrom(selectedCategories) { tapped, current in
+            .withLatestFrom(selectedCategoriesRelay) { tapped, current in
                 var new = current
                 if new.contains(tapped) {
                     new.remove(tapped)
@@ -104,15 +119,15 @@ final class OnboardingViewModel: OnboardingViewModelType {
                 }
                 return new
             }
-            .bind(to: selectedCategories)
+            .bind(to: selectedCategoriesRelay)
             .disposed(by: disposeBag)
         
         let enableNext = currentStepRelay.asObservable().flatMapLatest { step -> Observable<Bool> in
             switch step {
             case .location:
-                return self.selectedLocations.asObservable().map { $0.count >= 1 }
+                return self.selectedLocationsRelay.asObservable().map { $0.count >= 1 }
             case .category:
-                return self.selectedCategories.asObservable().map { $0.count >= 1 }
+                return self.selectedCategoriesRelay.asObservable().map { $0.count >= 1 }
             }
         }
         
@@ -127,12 +142,28 @@ final class OnboardingViewModel: OnboardingViewModelType {
         
         return Output(
             currentStep: currentStepRelay.asObservable(),
-            selectedCategories: selectedCategories.asObservable(),
-            selectedLocations: selectedLocations.asObservable(),
+            selectedCategories: selectedCategoriesRelay.asObservable(),
+            selectedLocations: selectedLocationsRelay.asObservable(),
             enableNext: enableNext,
             finish: finishSubject.asObservable(),
             labelText: labelText,
             progress: progressRelay.asObservable()
         )
+    }
+    
+    //MARK: 기타 메서드
+    private func sendOnboardingData() {
+        let locations = Array(selectedLocationsRelay.value)
+        let categories = Array(selectedCategoriesRelay.value)
+        
+        useCase.updateOnboarding(location: locations, category: categories)
+            .subscribe(onCompleted: {
+                print("온보딩 데이터 서버 전송 완료")
+                UserDefaults.standard.set(true, forKey: "hasSeenOnboarding")
+                self.finishSubject.onNext(true)
+            }, onError: { error in
+                print("온보딩 데이터 전송 실패: \(error.localizedDescription)")
+            })
+            .disposed(by: disposeBag)
     }
 }

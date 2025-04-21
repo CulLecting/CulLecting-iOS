@@ -11,8 +11,11 @@ import Foundation
 import RxCocoa
 import RxSwift
 
+protocol JoinViewModelProtocol {
+    func transform(input: JoinViewModel.Input) -> JoinViewModel.Output
+}
 
-final class JoinViewModel {
+final class JoinViewModel: JoinViewModelProtocol {
 
     struct Input {
         let email: Observable<String>

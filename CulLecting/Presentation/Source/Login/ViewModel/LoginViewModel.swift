@@ -11,7 +11,11 @@ import RxCocoa
 import RxSwift
 
 
-final class LoginViewModel {
+protocol LoginViewModelProtocol {
+    func transform(input: LoginViewModel.Input) -> LoginViewModel.Output
+}
+
+final class LoginViewModel: LoginViewModelProtocol {
 
     // MARK: - Input & Output
     struct Input {
@@ -32,6 +36,7 @@ final class LoginViewModel {
         self.authUseCase = useCase
     }
 
+    //MARK: protocol
     func transform(input: Input) -> Output {
         let result = input.loginTap
             .withLatestFrom(Observable.combineLatest(input.email, input.password))

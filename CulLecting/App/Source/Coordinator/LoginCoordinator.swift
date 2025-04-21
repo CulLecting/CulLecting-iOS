@@ -6,6 +6,7 @@
 //
 
 import UIKit
+
 import Swinject
 
 public protocol LoginCoordinatorProtocol: Coordinator {

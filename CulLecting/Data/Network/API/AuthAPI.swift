@@ -17,7 +17,6 @@ enum AuthAPI: URLRequestConvertible {
     case refreshToken
     case sendVerificationCode(email: String)
     case verifyCode(email: String, code: String)
-    case updateOnboarding(OnboardingRequestDTO)
     case resetPassword(email: String)
     case confirmResetPassword(dto: ResetPasswordDTO, token: String)
     case changePassword(before: String, new: String)
@@ -26,49 +25,54 @@ enum AuthAPI: URLRequestConvertible {
 
     var method: HTTPMethod {
         switch self {
-        case .userInfo: return .get
-        default: return .post
+        case .userInfo:
+            return .get
+        default:
+            return .post
         }
     }
 
     var path: String {
         switch self {
-        case .login: return "/member/login"
-        case .signup: return "/member/signup"
-        case .userInfo: return "/member/userinfo"
-        case .refreshToken: return "/member/refreshtoken"
-        case .sendVerificationCode: return "/member/send"
-        case .verifyCode: return "/member/verify"
-        case .updateOnboarding: return "/member/onboarding"
-        case .resetPassword: return "/member/login/resetpassword"
-        case .confirmResetPassword: return "/member/passwordupdate"
-        case .changePassword: return "/member/mypage/passwordreset"
-        case .logout: return "/member/logout"
-        case .deleteAccount: return "/member/deletemember"
+        case .login: return APIConstants.Path.login
+        case .signup: return APIConstants.Path.signup
+        case .userInfo: return APIConstants.Path.userInfo
+        case .refreshToken: return APIConstants.Path.refreshToken
+        case .sendVerificationCode: return APIConstants.Path.sendVerificationCode
+        case .verifyCode: return APIConstants.Path.verifyCode
+        case .resetPassword: return APIConstants.Path.resetPassword
+        case .confirmResetPassword: return APIConstants.Path.confirmResetPassword
+        case .changePassword: return APIConstants.Path.changePassword
+        case .logout: return APIConstants.Path.logout
+        case .deleteAccount: return APIConstants.Path.deleteAccount
         }
     }
 
     var headers: HTTPHeaders {
-        var headers: HTTPHeaders = ["Content-Type": "application/json"]
+        // 기본 헤더
+        var headers: HTTPHeaders = [
+            APIConstants.HeaderKey.contentType: APIConstants.HeaderValue.json
+        ]
 
+        //추가 헤더
         switch self {
-        case .signup(_, let token), .confirmResetPassword(_, let token):
-            headers.add(name: "Authorization", value: token)
+        case .signup(_, let token),
+                .confirmResetPassword(_, let token):
+            headers.add(name: APIConstants.HeaderKey.authorization, value: token)
             
-        case .userInfo, .updateOnboarding, .changePassword, .logout, .deleteAccount:
+        case .userInfo, .changePassword, .logout, .deleteAccount:
             if let token = TokenStorage.shared.accessToken {
-                headers.add(name: "Authorization", value: token)
+                headers.add(name: APIConstants.HeaderKey.authorization, value: token)
             }
             
         case .refreshToken:
             if let token = TokenStorage.shared.refreshToken {
-                headers.add(name: "Authorization", value: token)
+                headers.add(name: APIConstants.HeaderKey.authorization, value: token)
             }
             
         default:
             break
         }
-
         return headers
     }
 
@@ -76,13 +80,19 @@ enum AuthAPI: URLRequestConvertible {
         switch self {
         case let .login(email, password):
             return ["email": email, "password": password]
-            
+
         case let .sendVerificationCode(email):
             return ["email": email]
-            
+
         case let .verifyCode(email, code):
             return ["email": email, "code": code]
-            
+
+        case let .changePassword(before, new):
+            return ["before": before, "new": new]
+
+        case let .resetPassword(email):
+            return ["email": email]
+
         default:
             return nil
         }
@@ -90,25 +100,19 @@ enum AuthAPI: URLRequestConvertible {
 
     var body: Data? {
         switch self {
-        case let .signup(dto: dto, _):
+        case let .signup(dto, _):
             return try? JSONEncoder().encode(dto)
-            
-        case let .updateOnboarding(dto):
+
+        case let .confirmResetPassword(dto, _):
             return try? JSONEncoder().encode(dto)
-            
-        case let .confirmResetPassword(dto: dto, _):
-            return try? JSONEncoder().encode(dto)
-            
+
         default:
             return nil
         }
     }
 
-
     func asURLRequest() throws -> URLRequest {
-        let baseURL = URL(string: "https://puppyting.site")!
-        let url = baseURL.appendingPathComponent(path)
-
+        let url = URL(string: APIConstants.baseURL + path)!
         var request = URLRequest(url: url)
         request.method = method
         request.headers = headers
@@ -118,7 +122,6 @@ enum AuthAPI: URLRequestConvertible {
         } else if let body = body {
             request.httpBody = body
         }
-
         return request
     }
 }
