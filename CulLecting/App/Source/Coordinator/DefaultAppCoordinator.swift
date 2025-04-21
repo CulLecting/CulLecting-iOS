@@ -32,10 +32,16 @@ class DefaultAppCoordinator: DefaultAppCoordinatorProtocol {
     public var type: CoordinatorType = .app
     public weak var finishDelegate: CoordinatorFinishDelegate?
     
-    // 구현 필요
-    private var haveToken: Bool = false
-    private var hasSeenOnboarding: Bool = false
-    
+    //MARK: 토큰 & 온보딩 처리
+    private var haveToken: Bool {
+        return TokenStorage.shared.accessToken != nil
+    }
+
+    private var hasSeenOnboarding: Bool {
+        return UserDefaults.standard.bool(forKey: "hasSeenOnboarding")
+    }
+
+    //MARK: init
     public init(dependency: Dependency) {
         self.dependency = dependency
         self.navigationController = dependency.navigationController
@@ -113,7 +119,6 @@ extension DefaultAppCoordinator: CoordinatorFinishDelegate {
 /// 이벤트 처리
 extension DefaultAppCoordinator {
     public func didLoggedIn() {
-        haveToken = true
         hasSeenOnboarding ? showTabbarFlow() : showOnboardingFlow()
     }
     

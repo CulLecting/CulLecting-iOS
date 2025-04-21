@@ -7,6 +7,7 @@
 
 
 import UIKit
+
 import Swinject
 
 public protocol OnboardingCoordinatorProtocol: Coordinator {
@@ -14,6 +15,7 @@ public protocol OnboardingCoordinatorProtocol: Coordinator {
 }
 
 public class OnboardingCoordinator: OnboardingCoordinatorProtocol {
+    
     public var childCoordinators: [Coordinator] = []
     public var navigationController: UINavigationController
     public var type: CoordinatorType = .onboarding
@@ -21,8 +23,11 @@ public class OnboardingCoordinator: OnboardingCoordinatorProtocol {
     
     public var finishDelegate: CoordinatorFinishDelegate?
     
-    public init(navigationController: UINavigationController) {
+    private let container: Resolver
+    
+    public init(navigationController: UINavigationController, container: Resolver) {
         self.navigationController = navigationController
+        self.container = container
     }
     
     public func start() {
@@ -33,9 +38,16 @@ public class OnboardingCoordinator: OnboardingCoordinatorProtocol {
     public func showOnboardingFlow() {
         print("OnboardingCoordinator - showOnboardingFlow() 실행됨")
         
-        let onboardingVC = OnboardingViewController()
+        guard let viewModel = container.resolve(OnboardingViewModel.self) else {
+            print("OnboardingCoordinator - OnboardingViewModel resolve 실패")
+            return
+        }
+        
+        let onboardingVC = OnboardingViewController(viewModel: viewModel)
+        
         onboardingVC.onFinishTransition = { [weak self] in
             guard let self = self else { return }
+            
             let finishVC = OnboardingFinishViewController()
             finishVC.onFinish = { [weak self] in
                 self?.finish()

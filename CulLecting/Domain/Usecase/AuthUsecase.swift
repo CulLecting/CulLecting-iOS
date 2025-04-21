@@ -15,7 +15,7 @@ public protocol AuthUsecaseProtocol {
     func fetchUserInfo() -> Single<UserEntity>
     func refreshToken() -> Single<TokenDTO>
     func sendVerificationCode(email: String) -> Completable
-    func verifyCode(email: String, code: String) -> Single<String> // 토큰 반환
+    func verifyCode(email: String, code: String) -> Single<String>
     func updateOnboarding(location: [String], category: [String]) -> Completable
     func resetPassword(email: String) -> Completable
     func confirmResetPassword(email: String, newPassword: String, token: String) -> Completable
@@ -33,6 +33,10 @@ public final class AuthUseCase: AuthUsecaseProtocol {
 
     public func login(email: String, password: String) -> Single<TokenDTO> {
         repository.login(email: email, password: password)
+            .do(onSuccess: { token in
+                TokenStorage.shared.accessToken = token.accessToken
+                TokenStorage.shared.refreshToken = token.refreshToken
+            })
     }
 
     public func signup(email: String, password: String, nickname: String, token: String) -> Completable {
