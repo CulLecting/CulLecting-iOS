@@ -65,6 +65,7 @@ class DefaultAppCoordinator: DefaultAppCoordinatorProtocol {
         print("showOnboardingFlow 실행됨")
         guard let onboardingCoordinator = dependency.injector.resolve(OnboardingCoordinator.self, argument: navigationController) else { return }
         onboardingCoordinator.parentCoordinator = self
+        onboardingCoordinator.finishDelegate = self
         childCoordinators.append(onboardingCoordinator)
         onboardingCoordinator.start()
     }

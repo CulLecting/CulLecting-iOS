@@ -5,6 +5,7 @@
 //  Created by 김승희 on 4/16/25.
 //
 
+import Foundation
 
 public enum NetworkError: Error {
     case serverMessage(String)
@@ -17,5 +18,12 @@ public enum NetworkError: Error {
         case .decodingError: return "응답을 해석할 수 없습니다."
         case .unknown: return "알 수 없는 오류가 발생했습니다. 관리자에게 문의하세요."
         }
+    }
+}
+
+
+extension NetworkError: LocalizedError {
+    public var errorDescription: String? {
+        return self.message
     }
 }

@@ -58,16 +58,16 @@ enum AuthAPI: URLRequestConvertible {
         switch self {
         case .signup(_, let token),
                 .confirmResetPassword(_, let token):
-            headers.add(name: APIConstants.HeaderKey.authorization, value: token)
+            headers.add(name: APIConstants.HeaderKey.authorization, value: "Bearer \(token)")
             
         case .userInfo, .changePassword, .logout, .deleteAccount:
             if let token = TokenStorage.shared.accessToken {
-                headers.add(name: APIConstants.HeaderKey.authorization, value: token)
+                headers.add(name: APIConstants.HeaderKey.authorization, value: "Bearer \(token)")
             }
             
         case .refreshToken:
             if let token = TokenStorage.shared.refreshToken {
-                headers.add(name: APIConstants.HeaderKey.authorization, value: token)
+                headers.add(name: APIConstants.HeaderKey.authorization, value: "Bearer \(token)")
             }
             
         default:

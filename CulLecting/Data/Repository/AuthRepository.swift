@@ -24,7 +24,7 @@ final class AuthRepository: AuthRepositoryProtocol {
     }
 
     func signup(email: String, password: String, nickname: String, token: String) -> Completable {
-        let dto = SignUpDTO(email: email, password: password, nickName: nickname, token: token)
+        let dto = SignUpDTO(email: email, password: password, nickname: nickname, token: token)
         return NetworkManager.shared
             .requestWithoutData(AuthAPI.signup(dto: dto, token: token))
     }
@@ -48,12 +48,6 @@ final class AuthRepository: AuthRepositoryProtocol {
         return (NetworkManager.shared
             .request(AuthAPI.verifyCode(email: email, code: code)) as Single<VerifyCodeResponseDTO>)
             .map { $0.token }
-    }
-
-    func updateOnboarding(location: [String], category: [String]) -> Completable {
-        let dto = OnboardingRequestDTO(location: location, category: category)
-        return NetworkManager.shared
-            .requestWithoutData(AuthAPI.updateOnboarding(dto))
     }
 
     func resetPassword(email: String) -> Completable {

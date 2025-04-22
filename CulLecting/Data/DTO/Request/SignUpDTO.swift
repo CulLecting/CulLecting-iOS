@@ -9,6 +9,6 @@
 public struct SignUpDTO: Codable, Sendable {
     let email: String
     let password: String
-    let nickName: String
+    let nickname: String
     let token: String
 }

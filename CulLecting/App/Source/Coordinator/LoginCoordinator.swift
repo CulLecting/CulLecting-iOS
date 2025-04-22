@@ -13,6 +13,7 @@ public protocol LoginCoordinatorProtocol: Coordinator {
     func showLoginFlow()
     func didLoginSuccess()
     func showJoinView()
+    func showOnboardingFlow()
 }
 
 public final class LoginCoordinator: LoginCoordinatorProtocol {
@@ -46,14 +47,13 @@ public final class LoginCoordinator: LoginCoordinatorProtocol {
     }
     
     public func showJoinView() {
-        print("LoginCoordinator - showJoinView 호출됨")
-        guard let viewModel = container.resolve(JoinViewModel.self) else {
-            print("LoginCoordinator - JoinViewModel resolve 실패")
-            return
-        }
-
-        let joinVC = JoinViewController(viewModel: viewModel)
+        guard let viewModel = container.resolve(JoinViewModel.self) else { return }
+        let joinVC = JoinViewController(viewModel: viewModel, coordinator: self)
         navigationController.pushViewController(joinVC, animated: true)
+    }
+    
+    public func showOnboardingFlow() {
+        parentCoordinator?.showOnboardingFlow()
     }
 
 }

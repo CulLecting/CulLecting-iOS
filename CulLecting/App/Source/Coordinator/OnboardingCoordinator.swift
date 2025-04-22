@@ -48,7 +48,7 @@ public class OnboardingCoordinator: OnboardingCoordinatorProtocol {
         onboardingVC.onFinishTransition = { [weak self] in
             guard let self = self else { return }
             
-            let finishVC = OnboardingFinishViewController()
+            let finishVC = OnboardingFinishViewController(viewModel: viewModel)
             finishVC.onFinish = { [weak self] in
                 self?.finish()
             }

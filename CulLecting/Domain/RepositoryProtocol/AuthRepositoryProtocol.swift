@@ -18,7 +18,6 @@ public protocol AuthRepositoryProtocol {
     func refreshToken() -> Single<TokenDTO>
     func sendVerificationCode(email: String) -> Completable
     func verifyCode(email: String, code: String) -> Single<String>
-    func updateOnboarding(location: [String], category: [String]) -> Completable
     func resetPassword(email: String) -> Completable
     func confirmResetPassword(email: String, newPassword: String, token: String) -> Completable
     func changePassword(before: String, new: String) -> Completable

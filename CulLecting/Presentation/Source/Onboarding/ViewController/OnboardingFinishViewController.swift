@@ -14,6 +14,7 @@ import Then
 final class OnboardingFinishViewController: UIViewController {
     
     var onFinish: (()->Void)?
+    private let viewModel: OnboardingViewModel
     
     private let iconView = UIImageView().then {
         $0.image = UIImage.cullectingIconWhite
@@ -37,10 +38,20 @@ final class OnboardingFinishViewController: UIViewController {
     
     @objc private func onTapStartButton() {
         print("onTapStartButton 클릭됨")
+        viewModel.sendOnboardingData()
         onFinish?()
     }
     
     //MARK: LifeCycle
+    init(viewModel: OnboardingViewModel) {
+        self.viewModel = viewModel
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
