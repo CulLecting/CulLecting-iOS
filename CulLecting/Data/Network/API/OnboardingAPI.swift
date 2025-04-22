@@ -34,7 +34,7 @@ enum OnboardingAPI: URLRequestConvertible {
         ]
         
         if let token = TokenStorage.shared.accessToken {
-            headers.add(name: APIConstants.HeaderKey.authorization, value: token)
+            headers.add(name: APIConstants.HeaderKey.authorization, value: "Bearer \(token)")
         }
         return headers
     }

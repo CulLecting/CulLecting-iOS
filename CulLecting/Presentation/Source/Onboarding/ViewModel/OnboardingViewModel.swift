@@ -152,7 +152,7 @@ final class OnboardingViewModel: OnboardingViewModelProtocol {
     }
     
     //MARK: 기타 메서드
-    private func sendOnboardingData() {
+    func sendOnboardingData() {
         let locations = Array(selectedLocationsRelay.value)
         let categories = Array(selectedCategoriesRelay.value)
         

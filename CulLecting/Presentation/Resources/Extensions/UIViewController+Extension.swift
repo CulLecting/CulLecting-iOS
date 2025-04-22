@@ -27,9 +27,10 @@ extension UIViewController {
         print("window 개수: \(windowScene.windows.count)개")
         
         toastWindow.addSubview(toastView)
+        toastView.translatesAutoresizingMaskIntoConstraints = false
         toastWindow.layoutIfNeeded()
         
-        //MARK: 이거 메모리 해제 테스트 해보기
+        //TODO: 이거 메모리 해제 테스트 해보기
         toastView.alpha = 0.0
         UIView.animate(withDuration: 0.5, animations: {
             toastView.alpha = 1.0
@@ -42,5 +43,27 @@ extension UIViewController {
                 toastWindow.windowScene = nil
             })
         }
+    }
+    
+    func showAlert(title: String, message: String, okTitle: String = "확인", okHandler: (() -> Void)? = nil) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        let ok = UIAlertAction(title: okTitle, style: .default) { _ in
+            okHandler?()
+        }
+        alert.addAction(ok)
+        self.present(alert, animated: true, completion: nil)
+    }
+    
+    func showAlertWithCancel(title: String, message: String, okTitle: String = "확인", cancelTitle: String = "취소", okHandler: (() -> Void)? = nil, cancelHandler: (() -> Void)? = nil) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        let ok = UIAlertAction(title: okTitle, style: .default) { _ in
+            okHandler?()
+        }
+        let cancel = UIAlertAction(title: cancelTitle, style: .cancel) { _ in
+            cancelHandler?()
+        }
+        alert.addAction(cancel)
+        alert.addAction(ok)
+        self.present(alert, animated: true, completion: nil)
     }
 }

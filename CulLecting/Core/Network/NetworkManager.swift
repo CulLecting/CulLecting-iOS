@@ -32,6 +32,11 @@ final class NetworkManager {
                         }
 
                     case .failure:
+                        print("NetworkManager: Request failed")
+                        print("URL: \(response.request?.url?.absoluteString ?? "No URL")")
+                        print("Status Code: \(response.response?.statusCode ?? 0)")
+                        print("Response Data: \(String(data: response.data ?? Data(), encoding: .utf8) ?? "No data")")
+
                         if let data = response.data,
                            let errorDTO = try? JSONDecoder().decode(ErrorResponseDTO.self, from: data) {
                             single(.failure(NetworkError.serverMessage(errorDTO.message)))
@@ -57,6 +62,11 @@ final class NetworkManager {
                         completable(.completed)
 
                     case .failure:
+                        print("NetworkManager: Request failed")
+                        print("URL: \(response.request?.url?.absoluteString ?? "No URL")")
+                        print("Status Code: \(response.response?.statusCode ?? 0)")
+                        print("Response Data: \(String(data: response.data ?? Data(), encoding: .utf8) ?? "No data")")
+
                         if let data = response.data,
                            let errorDTO = try? JSONDecoder().decode(ErrorResponseDTO.self, from: data) {
                             completable(.error(NetworkError.serverMessage(errorDTO.message)))
