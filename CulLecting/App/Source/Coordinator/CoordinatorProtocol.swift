@@ -9,7 +9,8 @@ import UIKit
 
 
 public enum CoordinatorType {
-    case app, login, onboarding, tabbar
+    case app, login, onboarding, tabbar //ParentFlow
+    case home, archive, search, mypage //TabbarFlow
 }
 
 public protocol Coordinator : AnyObject {

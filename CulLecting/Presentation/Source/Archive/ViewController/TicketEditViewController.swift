@@ -11,26 +11,26 @@ import PinLayout
 import Then
 
 final class TicketEditViewController: UIViewController {
-
+    
     // MARK: - Properties
     private var ticket: Ticket
     var onSave: ((Ticket) -> Void)?
-
+    
     private let rootContainer = UIScrollView()
     private let contentContainer = UIView()
-
+    
     private let titleLabel = UILabel().then {
         $0.text = "어떤 행사였나요?"
         $0.font = .systemFont(ofSize: 16, weight: .semibold)
     }
-
+    
     private let titleTextField = UITextField.makeTextField(style: .defaultStyle, placeholderText: "행사 제목을 입력하세요")
-
+    
     private let categoryLabel = UILabel().then {
         $0.text = "문화 카테고리"
         $0.font = .systemFont(ofSize: 16, weight: .semibold)
     }
-
+    
     private let categoryButton = UIButton().then {
         $0.setTitle("카테고리 선택", for: .normal)
         $0.setTitleColor(.grey70, for: .normal)
@@ -40,12 +40,12 @@ final class TicketEditViewController: UIViewController {
         $0.contentHorizontalAlignment = .left
         $0.contentEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)
     }
-
+    
     private let dateLabel = UILabel().then {
         $0.text = "언제 다녀오셨나요?"
         $0.font = .systemFont(ofSize: 16, weight: .semibold)
     }
-
+    
     private let dateSelectButton = UIButton().then {
         $0.setTitle("날짜 선택", for: .normal)
         $0.setTitleColor(.grey70, for: .normal)
@@ -55,19 +55,19 @@ final class TicketEditViewController: UIViewController {
         $0.contentHorizontalAlignment = .left
         $0.contentEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)
     }
-
+    
     private let datePicker = UIDatePicker().then {
         $0.datePickerMode = .date
         $0.preferredDatePickerStyle = .wheels
         $0.locale = Locale(identifier: "ko_KR")
         $0.isHidden = true
     }
-
+    
     private let backTextLabel = UILabel().then {
         $0.text = "뒷면 텍스트"
         $0.font = .systemFont(ofSize: 16, weight: .semibold)
     }
-
+    
     private let backTextView = UITextView().then {
         $0.font = .systemFont(ofSize: 14)
         $0.layer.cornerRadius = 8
@@ -75,19 +75,19 @@ final class TicketEditViewController: UIViewController {
         $0.layer.borderWidth = 1
         $0.textContainerInset = UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
     }
-
+    
     private let saveButton = UIButton.makeButton(style: .darkButtonActive, title: "수정하기", cornerRadius: 28)
-
+    
     // MARK: - Init
     init(ticket: Ticket) {
         self.ticket = ticket
         super.init(nibName: nil, bundle: nil)
     }
-
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-
+    
     // MARK: - LifeCycle
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -96,19 +96,19 @@ final class TicketEditViewController: UIViewController {
         setupData()
         setupActions()
     }
-
+    
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         rootContainer.pin.all(view.pin.safeArea)
         contentContainer.pin.width(of: rootContainer).sizeToFit(.width)
         rootContainer.contentSize = contentContainer.frame.size
     }
-
+    
     // MARK: - Setup
     private func setupUI() {
         view.addSubview(rootContainer)
         rootContainer.addSubview(contentContainer)
-
+        
         contentContainer.flex
             .padding(20)
             .define {
@@ -124,12 +124,21 @@ final class TicketEditViewController: UIViewController {
                 $0.addItem(saveButton).marginTop(30).height(56)
             }
     }
-
+    
     private func setupData() {
-        titleTextField.text = ""
-        datePicker.date = ticket.attendAt
-        backTextView.text = ticket.backText
-        updateDateButtonTitle(with: ticket.attendAt)
+        titleTextField.text = ticket.title
+        backTextView.text = ticket.description
+        categoryButton.setTitle(ticket.category, for: .normal)
+        
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        
+        if let convertedDate = formatter.date(from: ticket.date) {
+            datePicker.date = convertedDate
+            updateDateButtonTitle(with: convertedDate)
+        } else {
+            print("날짜 파싱 실패: \(ticket.date)")
+        }
     }
 
     private func setupActions() {
@@ -142,13 +151,23 @@ final class TicketEditViewController: UIViewController {
 
         saveButton.addAction(UIAction { [weak self] _ in
             guard let self = self else { return }
+            
+            // date -> string 변환
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd"
+            let formattedDate = formatter.string(from: datePicker.date)
+            
             let updatedTicket = Ticket(
                 id: ticket.id,
-                attendAt: datePicker.date,
-                poster: ticket.poster,
-                averageColorHex: ticket.averageColorHex,
-                backText: backTextView.text
+                title: titleTextField.text ?? "",
+                description: backTextView.text ?? "",
+                date: formattedDate,
+                imageURL: ticket.imageURL,
+                category: ticket.category,
+                template: ticket.template,
+                averageColorHex: ticket.averageColorHex
             )
+            
             self.onSave?(updatedTicket)
             self.dismiss(animated: true)
         }, for: .touchUpInside)

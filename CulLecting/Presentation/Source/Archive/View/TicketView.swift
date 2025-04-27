@@ -38,7 +38,7 @@ final class TicketView: UIView {
         
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
-        $0.text = formatter.string(from: ticket.attendAt)
+        $0.text = ""
     }
     private let labelContainer = UIView()
     
@@ -128,20 +128,19 @@ final class TicketView: UIView {
 
     func configure(with ticket: Ticket) {
         self.ticket = ticket
-
-        if let url = URL(string: ticket.poster) {
+        
+        if let url = URL(string: ticket.imageURL) {
             loadImage(from: url) { [weak self] image in
                 self?.backgroundImageView.image = image
                 self?.thumbnailImageView.image = image
             }
         }
+        blurView.backgroundColor = UIColor.black.withAlphaComponent(0.4)
 
-        if let blurColor = UIColor(hex: ticket.averageColorHex) {
-            blurView.backgroundColor = blurColor.withAlphaComponent(0.6)
-        }
-
-        backTextLabel.text = ticket.backText
-
+        titleLabel.text = ticket.title
+        dateLabel.text = ticket.date
+        backTextLabel.text = ticket.description
+        
         updateViewState(animated: false)
     }
 
@@ -185,7 +184,6 @@ final class TicketView: UIView {
     }
     
     // MARK: - 이미지 로딩
-
     private func loadImage(from url: URL, completion: @escaping (UIImage?) -> Void) {
         URLSession.shared.dataTask(with: url) { data, _, _ in
             guard let data = data, let image = UIImage(data: data) else {

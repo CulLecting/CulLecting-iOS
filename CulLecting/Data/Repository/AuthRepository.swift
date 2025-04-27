@@ -14,10 +14,10 @@ import RxSwift
 
 final class AuthRepository: AuthRepositoryProtocol {
     
-    // MARK: - Init
+    // MARK: Init
     init() {}
 
-    // MARK: - AuthRepositoryProtocol
+    // MARK: AuthRepositoryProtocol
 
     func login(email: String, password: String) -> Single<TokenDTO> {
         return NetworkManager.shared.request(AuthAPI.login(email: email, password: password))

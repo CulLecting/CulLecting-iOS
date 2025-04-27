@@ -9,7 +9,7 @@ import UIKit
 
 import RxSwift
 
-public protocol AuthUsecaseProtocol {
+public protocol AuthUseCaseProtocol {
     func login(email: String, password: String) -> Single<TokenDTO>
     func signup(email: String, password: String, nickname: String, token: String) -> Completable
     func fetchUserInfo() -> Single<UserEntity>
@@ -23,7 +23,7 @@ public protocol AuthUsecaseProtocol {
     func deleteAccount() -> Completable
 }
 
-public final class AuthUseCase: AuthUsecaseProtocol {
+public final class AuthUseCase: AuthUseCaseProtocol {
     private let repository: AuthRepositoryProtocol
 
     public init(repository: AuthRepositoryProtocol) {

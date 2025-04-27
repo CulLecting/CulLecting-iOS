@@ -9,7 +9,7 @@ import UIKit
 
 import Swinject
 
-public protocol LoginCoordinatorProtocol: Coordinator {
+public protocol LoginCoordinatorProtocol: CoordinatorProtocol {
     func showLoginFlow()
     func didLoginSuccess()
     func showJoinView()
@@ -18,10 +18,10 @@ public protocol LoginCoordinatorProtocol: Coordinator {
 
 public final class LoginCoordinator: LoginCoordinatorProtocol {
 
-    public var childCoordinators: [Coordinator] = []
+    public var childCoordinators: [CoordinatorProtocol] = []
     public var navigationController: UINavigationController
     public var type: CoordinatorType = .login
-    public weak var parentCoordinator: DefaultAppCoordinatorProtocol?
+    public weak var parentCoordinator: FirstCoordinatorProtocol?
     
     public var finishDelegate: CoordinatorFinishDelegate?
     

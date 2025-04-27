@@ -134,9 +134,9 @@ final class OnboardingViewModel: OnboardingViewModelProtocol {
         let labelText = currentStepRelay.asObservable().map { step in
             switch step {
             case .location:
-                return "어떤 종류의 문화 콘텐츠를 좋아하세요?"
-            case .category:
                 return "주로 어디에서 문화 콘텐츠를 즐기세요?"
+            case .category:
+                return "어떤 종류의 문화 콘텐츠를 좋아하세요?"
             }
         }
         

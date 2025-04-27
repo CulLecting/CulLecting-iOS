@@ -18,16 +18,16 @@ public struct AppAssembly: Assembly {
         HomeAssembly().assemble(container: container)
         ArchiveAssembly().assemble(container: container)
         SearchAssembly().assemble(container: container)
-        MyPageAssembly().assemble(container: container)
+        MypageAssembly().assemble(container: container)
         TabBarCoordinatorAssembly().assemble(container: container)
         
         // AppCoordinatorProtocol 등록
-        container.register(DefaultAppCoordinatorProtocol.self) { (resolver, navigationController: UINavigationController, window: UIWindow) in
-            let dependency = DefaultAppCoordinator.Dependency(
+        container.register(FirstCoordinatorProtocol.self) { (resolver, navigationController: UINavigationController, window: UIWindow) in
+            let dependency = FirstCoordinator.Dependency(
                 navigationController: navigationController,
                 injector: resolver
             )
-            return DefaultAppCoordinator(dependency: dependency)
+            return FirstCoordinator(dependency: dependency)
         }
     }
     
