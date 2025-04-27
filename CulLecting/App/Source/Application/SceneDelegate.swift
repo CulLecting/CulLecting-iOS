@@ -12,7 +12,7 @@ import Swinject
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     var window: UIWindow?
-    var appCoordinator: DefaultAppCoordinatorProtocol?
+    var appCoordinator: FirstCoordinatorProtocol?
     var assembler: Assembler!
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
@@ -32,7 +32,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         
         // AppCoordinatorProtocol 타입의 객체를 resolve, 미리 AppAssembly에 등록한 AppCoordinator 구현체를 찾아서 생성
         // navigationController, window를 인자로 전달하여 화면 전환 및 윈도우 관리에 필요한 의존성을 주입받음
-        guard let appCoordinator = container.resolve(DefaultAppCoordinatorProtocol.self, arguments: navigationController, window) else {
+        guard let appCoordinator = container.resolve(FirstCoordinatorProtocol.self, arguments: navigationController, window) else {
             fatalError("AppCoordinator를 DI Container에서 주입받지 못함")
         }
         self.appCoordinator = appCoordinator

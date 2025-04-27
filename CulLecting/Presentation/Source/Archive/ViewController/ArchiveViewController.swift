@@ -10,56 +10,38 @@ import UIKit
 
 import FlexLayout
 import PinLayout
+import RxCocoa
+import RxSwift
 import Then
 
 
-class ArchiveViewController: UIViewController {
+final class ArchiveViewController: UIViewController {
     
-    private let ticketView = TicketCarouselView()
+    // MARK: - Properties
+    private let disposeBag = DisposeBag()
+    private let viewModel: ArchiveViewModel
+    //private weak var coordinator: ArchiveCoordinatorProtocol?
     
-    private let indexLabel = UILabel().then {
-        $0.textColor = .grey60
-        $0.font = .fontPretendard(style: .body14M)
-        $0.textAlignment = .center
-        $0.text = "1/10"
+    // MARK: - UI Components
+    private let segmentedControl = UISegmentedControl(items: ["내 기록", "취향 카드"]).then {
+        $0.selectedSegmentIndex = 0
+        $0.backgroundColor = .grey20
+        $0.selectedSegmentTintColor = .grey90
+        $0.setTitleTextAttributes([
+            .foregroundColor: UIColor.white,
+            .font: UIFont.fontPretendard(style: .body14M)
+        ], for: .selected)
+        $0.setTitleTextAttributes([
+            .foregroundColor: UIColor.grey70,
+            .font: UIFont.fontPretendard(style: .body14M)
+        ], for: .normal)
+        $0.layer.cornerRadius = 18
+        $0.clipsToBounds = true
     }
     
-    let dummyTickets: [Ticket] = [
-        Ticket(
-            id: UUID(),
-            attendAt: Date(),
-            poster: "https://picsum.photos/id/1011/300/400",
-            averageColorHex: "#A7C5BD",
-            backText: "서울에서의 감동적인 하루"
-        ),
-        Ticket(
-            id: UUID(),
-            attendAt: Date(),
-            poster: "https://picsum.photos/id/1012/300/400",
-            averageColorHex: "#FFE0AC",
-            backText: "혼자만의 시간을 보냈다"
-        ),
-        Ticket(
-            id: UUID(),
-            attendAt: Date(),
-            poster: "https://picsum.photos/id/1013/300/400",
-            averageColorHex: "#D5A6BD",
-            backText: "소중한 친구들과의 추억"
-        ),
-        Ticket(
-            id: UUID(),
-            attendAt: Date(),
-            poster: "https://picsum.photos/id/1014/300/400",
-            averageColorHex: "#C9DAE1",
-            backText: "다시 보고 싶은 영화 🎬"
-        ),
-        Ticket(
-            id: UUID(),
-            attendAt: Date(),
-            poster: "https://picsum.photos/id/1015/300/400",
-            averageColorHex: "#B0C4DE",
-            backText: "기억하고 싶은 하루"
-        )]
+    private let contentContainerView = UIView()
+    private let ticketSegmentView = TicketSegmentView()
+    private let analyzeSegmentView = AnalyzeSegmentView()
     
     private let floatingButton = UIButton().then {
         $0.setTitle("＋", for: .normal)
@@ -69,79 +51,115 @@ class ArchiveViewController: UIViewController {
         $0.layer.borderWidth = 0
         $0.layer.cornerRadius = 27
     }
-    
-    //MARK: LifeCycle
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        setNavigationBar()
-        setUI()
-    }
-    
-    init() {
+
+    // MARK: - Init
+    init(viewModel: ArchiveViewModel) {
+        self.viewModel = viewModel
+        //self.coordinator = coordinator
         super.init(nibName: nil, bundle: nil)
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
+
+    // MARK: - LifeCycle
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setNavigationBar()
+        setupUI()
+        setAction()
+        bindViewModel()
     }
-    
+
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        setLayout()
+        layoutUI()
     }
-    
-    //MARK: 기타 메서드
+
+    // MARK: - ViewModel Binding
+    private func bindViewModel() {
+        viewModel.archivingList
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] tickets in
+                self?.ticketSegmentView.configure(with: tickets)
+            })
+            .disposed(by: disposeBag)
+
+        viewModel.preferenceCard
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] card in
+                guard let card else { return }
+                self?.analyzeSegmentView.configure(with: card)
+            })
+            .disposed(by: disposeBag)
+    }
+
+    // MARK: - Setup
     private func setNavigationBar() {
         navigationController?.setNavigationBarHidden(false, animated: true)
         navigationItem.title = "내 기록"
     }
-    
+
     private func setAction() {
-        let floatingButtonAction = UIAction { [ weak self ] _ in
-            let makeTicketVC = MakeTicketViewController()
-            self?.navigationController?.pushViewController(makeTicketVC, animated: true)
+        let floatingButtonAction = UIAction { [weak self] _ in
+            self?.showAddTicket()
         }
         floatingButton.addAction(floatingButtonAction, for: .touchUpInside)
+
+        segmentedControl.addTarget(self, action: #selector(segmentChanged), for: .valueChanged)
     }
     
-    //MARK: UI
-    private func setUI() {
+    func showAddTicket() {
+        let useCase = ArchivingUseCase(repository: ArchivingRepository())
+        let viewModel = AddTicketViewModel(useCase: useCase)
+        let addTicketVC = AddTicketViewController(viewModel: viewModel)
+        navigationController?.pushViewController(addTicketVC, animated: true)
+    }
+
+    @objc private func segmentChanged() {
+        let isTicket = segmentedControl.selectedSegmentIndex == 0
+        ticketSegmentView.isHidden = !isTicket
+        analyzeSegmentView.isHidden = isTicket
+
+        if isTicket {
+            contentContainerView.bringSubviewToFront(ticketSegmentView)
+        } else {
+            contentContainerView.bringSubviewToFront(analyzeSegmentView)
+        }
+    }
+
+    // MARK: - UI Setup
+    private func setupUI() {
         view.backgroundColor = .white
-        view.addSubview(ticketView)
-        view.addSubview(indexLabel)
+        view.addSubview(segmentedControl)
+        view.addSubview(contentContainerView)
         view.addSubview(floatingButton)
-        
-        let limitedTickets = Array(dummyTickets.prefix(10))
-        ticketView.configure(with: limitedTickets)
-        
-        ticketView.onCardTapped = { [weak self] ticket in
-            let detailVC = TicketDetailViewController(ticket: ticket)
-            self?.navigationController?.pushViewController(detailVC, animated: true)
-        }
-        
-        ticketView.scrollCallback = { [weak self] index in
-            self?.indexLabel.text = "\(index + 1) / 10"
-        }
-        
-        setAction()
+
+        contentContainerView.addSubview(ticketSegmentView)
+        contentContainerView.addSubview(analyzeSegmentView)
+
+        // 초기 표시
+        contentContainerView.bringSubviewToFront(ticketSegmentView)
+        analyzeSegmentView.isHidden = true
     }
-    
-    private func setLayout() {
-        ticketView.pin
-            .top(view.pin.safeArea.top + 32)
-            .horizontally(20)
-            .height(500)
-        
-        indexLabel.pin
-            .below(of: ticketView)
-            .marginTop(20)
+
+    private func layoutUI() {
+        segmentedControl.pin
+            .top(view.pin.safeArea.top + 12)
             .hCenter()
-            .sizeToFit(.width)
-        
+            .width(180)
+            .height(36)
+
+        contentContainerView.pin
+            .below(of: segmentedControl)
+            .marginTop(20)
+            .horizontally()
+            .bottom(view.pin.safeArea.bottom)
+
+        ticketSegmentView.pin.all()
+        analyzeSegmentView.pin.all()
+
         floatingButton.pin
             .bottom(view.pin.safeArea.bottom + 20)
             .right(20)

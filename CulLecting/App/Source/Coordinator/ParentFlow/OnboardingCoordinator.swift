@@ -10,16 +10,16 @@ import UIKit
 
 import Swinject
 
-public protocol OnboardingCoordinatorProtocol: Coordinator {
+public protocol OnboardingCoordinatorProtocol: CoordinatorProtocol {
     func showOnboardingFlow()
 }
 
 public class OnboardingCoordinator: OnboardingCoordinatorProtocol {
     
-    public var childCoordinators: [Coordinator] = []
+    public var childCoordinators: [CoordinatorProtocol] = []
     public var navigationController: UINavigationController
     public var type: CoordinatorType = .onboarding
-    public weak var parentCoordinator: DefaultAppCoordinatorProtocol?
+    public weak var parentCoordinator: FirstCoordinatorProtocol?
     
     public var finishDelegate: CoordinatorFinishDelegate?
     

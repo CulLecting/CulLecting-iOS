@@ -15,7 +15,7 @@ final class NetworkManager {
     static let shared = NetworkManager()
     private init() {}
 
-    // MARK: - 데이터 있는 요청
+    // MARK: 데이터 있는 요청
     func request<T: Decodable>(
         _ urlRequest: URLRequestConvertible
     ) -> Single<T> {
@@ -49,7 +49,7 @@ final class NetworkManager {
         }
     }
 
-    // MARK: - 데이터 없는 요청 (Void 처리)
+    // MARK: 데이터 없는 요청 (Void 처리)
     func requestWithoutData(
         _ urlRequest: URLRequestConvertible
     ) -> Completable {
