@@ -39,7 +39,6 @@ final class ArchiveViewModel {
     }
     
     func transform(input: Input) -> Output {
-        
         // 아카이빙 데이터 불러오기
         input.fetchTrigger
             .flatMapLatest { [weak self] in

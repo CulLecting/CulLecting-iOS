@@ -14,7 +14,7 @@ import Then
 
 
 final class TicketSegmentView: UIView {
-    // MARK: - UI Components
+    // MARK: UI Components
     private let ticketView = TicketCarouselView()
     
     private let indexLabel = UILabel().then {
@@ -28,7 +28,7 @@ final class TicketSegmentView: UIView {
         $0.isHidden = true
     }
     
-    // MARK: - Init
+    // MARK: Init
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupUI()
@@ -44,7 +44,7 @@ final class TicketSegmentView: UIView {
         setLayout()
     }
 
-    // MARK: - Public Configure
+    // MARK: Public Configure
     func configure(with tickets: [Ticket]) {
         let hasTickets = !tickets.isEmpty
         ticketView.isHidden = !hasTickets
@@ -61,7 +61,7 @@ final class TicketSegmentView: UIView {
         }
     }
 
-    // MARK: - UI
+    // MARK: UI
     private func setupUI() {
         addSubview(ticketView)
         addSubview(indexLabel)
@@ -77,12 +77,9 @@ final class TicketSegmentView: UIView {
         indexLabel.pin
             .below(of: ticketView)
             .marginTop(20)
-            .hCenter()
             .sizeToFit(.width)
-            .top(100)
             .horizontally(20)
             .height(300)
-            .hCenter()
     }
 }
 

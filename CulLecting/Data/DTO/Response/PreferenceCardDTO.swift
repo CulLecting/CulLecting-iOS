@@ -6,14 +6,18 @@
 //
 
 
-struct PreferenceCardResponse: Decodable {
-    let status: Int
-    let message: String
-    let data: PreferenceCardData
-}
+import Foundation
 
-struct PreferenceCardData: Codable {
+struct PreferenceCardDTO: Decodable {
     let keywords: [String]
     let culturalCount: Int
     let manyCategory: String
+    
+    func mapping() -> PreferenceCardEntity {
+        return PreferenceCardEntity(
+            keywords: keywords,
+            culturalCount: culturalCount,
+            manyCategory: manyCategory
+        )
+    }
 }

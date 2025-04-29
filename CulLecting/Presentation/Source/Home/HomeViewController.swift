@@ -14,7 +14,11 @@ import Then
 
 
 final class HomeViewController: UIViewController {
+    //MARK: Properties
+    private let viewModel: HomeViewModel
+    private let coordinator: HomeCoordinator
 
+    //MARK: UI Components
     private let scrollView = UIScrollView()
     private let contentView = UIView()
 
@@ -73,6 +77,19 @@ final class HomeViewController: UIViewController {
         $0.layer.shadowRadius = 5
     }
 
+    
+    //MARK: init
+    init(viewModel: HomeViewModel, coordinator: HomeCoordinator) {
+        self.viewModel = viewModel
+        self.coordinator = coordinator
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    //MARK: View LifeCycle
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
@@ -130,11 +147,6 @@ final class HomeViewController: UIViewController {
     }
 
     @objc private func didTapFloatingButton() {
-        // 간단한 더미로 연결
-        let useCase = ArchivingUseCase(repository: ArchivingRepository())
-        let viewModel = AddTicketViewModel(useCase: useCase)
-        let addVC = AddTicketViewController(viewModel: viewModel)
-        navigationController?.pushViewController(addVC, animated: true)
     }
 
     @objc private func didTapSearchButton() {

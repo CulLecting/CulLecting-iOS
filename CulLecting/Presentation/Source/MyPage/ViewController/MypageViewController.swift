@@ -13,8 +13,12 @@ import PinLayout
 import Then
 
 
-public class MyPageViewController: UIViewController {
+public class MypageViewController: UIViewController {
+    //MARK: Properties
+    private let viewModel: MypageViewModel
+    private let coordinator: MypageCoordinator
 
+    //MARK: UI Components
     private let userName = UILabel().then {
         $0.text = "컬렉팅님" //네트워크 연결시 수정필요
         $0.font = .fontPretendard(style: .title18SB)
@@ -38,6 +42,20 @@ public class MyPageViewController: UIViewController {
         $0.register(MypageMenuTableViewCell.self, forCellReuseIdentifier: MypageMenuTableViewCell.mypageMenuTableViewCellIdentifier)
     }
     
+    //MARK: init
+    init(viewModel: MypageViewModel, coordinator: MypageCoordinator) {
+        self.viewModel = viewModel
+        self.coordinator = coordinator
+        super.init(nibName: nil, bundle: nil)
+        setupTableView()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    //MARK: View Lifecycle
+    
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
@@ -48,15 +66,6 @@ public class MyPageViewController: UIViewController {
         view.backgroundColor = .grey10
         setUI()
         setGesture()
-    }
-    
-    init() {
-        super.init(nibName: nil, bundle: nil)
-        setupTableView()
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
     }
     
     public override func viewDidLayoutSubviews() {
@@ -118,7 +127,7 @@ public class MyPageViewController: UIViewController {
     }
 }
 
-extension MyPageViewController: UITableViewDelegate, UITableViewDataSource {
+extension MypageViewController: UITableViewDelegate, UITableViewDataSource {
     
     private func setupTableView() {
         MypageMenuTableView.delegate = self

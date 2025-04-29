@@ -17,12 +17,14 @@ import Then
 
 final class ArchiveViewController: UIViewController {
     
-    // MARK: - Properties
+    // MARK: Properties
     private let disposeBag = DisposeBag()
     private let viewModel: ArchiveViewModel
-    //private weak var coordinator: ArchiveCoordinatorProtocol?
+    private weak var coordinator: ArchiveCoordinator?
     
-    // MARK: - UI Components
+    private var imagePickCompletion: ((UIImage) -> Void)?
+    
+    // MARK: UI Components
     private let segmentedControl = UISegmentedControl(items: ["내 기록", "취향 카드"]).then {
         $0.selectedSegmentIndex = 0
         $0.backgroundColor = .grey20
@@ -48,89 +50,43 @@ final class ArchiveViewController: UIViewController {
         $0.setTitleColor(.white, for: .normal)
         $0.titleLabel?.font = .systemFont(ofSize: 27, weight: .bold)
         $0.backgroundColor = .grey90
-        $0.layer.borderWidth = 0
         $0.layer.cornerRadius = 27
     }
-
-    // MARK: - Init
-    init(viewModel: ArchiveViewModel) {
+    
+    // MARK: init
+    init(viewModel: ArchiveViewModel, coordinator: ArchiveCoordinator) {
         self.viewModel = viewModel
-        //self.coordinator = coordinator
+        self.coordinator = coordinator
         super.init(nibName: nil, bundle: nil)
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-
-    // MARK: - LifeCycle
+    
+    // MARK: View LifeCycle
     override func viewDidLoad() {
         super.viewDidLoad()
         setNavigationBar()
-        setupUI()
-        setAction()
+        setUI()
         bindViewModel()
     }
-
+    
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        layoutUI()
+        setLayout()
     }
+}
 
-    // MARK: - ViewModel Binding
-    private func bindViewModel() {
-        viewModel.archivingList
-            .observe(on: MainScheduler.instance)
-            .subscribe(onNext: { [weak self] tickets in
-                self?.ticketSegmentView.configure(with: tickets)
-            })
-            .disposed(by: disposeBag)
-
-        viewModel.preferenceCard
-            .observe(on: MainScheduler.instance)
-            .subscribe(onNext: { [weak self] card in
-                guard let card else { return }
-                self?.analyzeSegmentView.configure(with: card)
-            })
-            .disposed(by: disposeBag)
-    }
-
-    // MARK: - Setup
-    private func setNavigationBar() {
+// MARK: - Setup
+private extension ArchiveViewController {
+    
+    func setNavigationBar() {
         navigationController?.setNavigationBarHidden(false, animated: true)
         navigationItem.title = "내 기록"
     }
-
-    private func setAction() {
-        let floatingButtonAction = UIAction { [weak self] _ in
-            self?.showAddTicket()
-        }
-        floatingButton.addAction(floatingButtonAction, for: .touchUpInside)
-
-        segmentedControl.addTarget(self, action: #selector(segmentChanged), for: .valueChanged)
-    }
     
-    func showAddTicket() {
-        let useCase = ArchivingUseCase(repository: ArchivingRepository())
-        let viewModel = AddTicketViewModel(useCase: useCase)
-        let addTicketVC = AddTicketViewController(viewModel: viewModel)
-        navigationController?.pushViewController(addTicketVC, animated: true)
-    }
-
-    @objc private func segmentChanged() {
-        let isTicket = segmentedControl.selectedSegmentIndex == 0
-        ticketSegmentView.isHidden = !isTicket
-        analyzeSegmentView.isHidden = isTicket
-
-        if isTicket {
-            contentContainerView.bringSubviewToFront(ticketSegmentView)
-        } else {
-            contentContainerView.bringSubviewToFront(analyzeSegmentView)
-        }
-    }
-
-    // MARK: - UI Setup
-    private func setupUI() {
+    func setUI() {
         view.backgroundColor = .white
         view.addSubview(segmentedControl)
         view.addSubview(contentContainerView)
@@ -139,31 +95,123 @@ final class ArchiveViewController: UIViewController {
         contentContainerView.addSubview(ticketSegmentView)
         contentContainerView.addSubview(analyzeSegmentView)
 
-        // 초기 표시
         contentContainerView.bringSubviewToFront(ticketSegmentView)
         analyzeSegmentView.isHidden = true
     }
-
-    private func layoutUI() {
+    
+    func setLayout() {
         segmentedControl.pin
             .top(view.pin.safeArea.top + 12)
             .hCenter()
             .width(180)
             .height(36)
-
+        
         contentContainerView.pin
             .below(of: segmentedControl)
             .marginTop(20)
             .horizontally()
             .bottom(view.pin.safeArea.bottom)
-
+        
         ticketSegmentView.pin.all()
         analyzeSegmentView.pin.all()
-
+        
         floatingButton.pin
-            .bottom(view.pin.safeArea.bottom + 20)
-            .right(20)
+            .bottom(view.pin.safeArea.bottom).marginBottom(20)
+            .right(view.pin.safeArea.right).marginRight(20)
             .width(54)
             .height(54)
+    }
+}
+
+// MARK: - Binding
+private extension ArchiveViewController {
+    
+    func bindViewModel() {
+        print("bindVM 호출")
+        // Input
+        let fetchTrigger = Observable.just(())
+        let segmentChanged = segmentedControl.rx.selectedSegmentIndex.asObservable()
+        
+        let input = ArchiveViewModel.Input(
+            fetchTrigger: fetchTrigger,
+            segmentChanged: segmentChanged
+        )
+        
+        // Output
+        let output = viewModel.transform(input: input)
+        
+        output.archivingList
+            .do(onNext: { ticket in
+                print("archivingList 수신: \(ticket.count)개")
+            })
+            .drive(onNext: { [weak self] tickets in
+                self?.ticketSegmentView.configure(with: tickets)
+            })
+            .disposed(by: disposeBag)
+        
+        output.preferenceCard
+            .do(onNext: { card in
+                print("preferenceCard 수신: \(String(describing: card))개")
+            })
+            .drive(onNext: { [weak self] card in
+                guard let card else { return }
+                self?.analyzeSegmentView.configure(with: card)
+            })
+            .disposed(by: disposeBag)
+        
+        output.isShowingArchiving
+            .drive(onNext: { [weak self] isArchiving in
+                self?.ticketSegmentView.isHidden = !isArchiving
+                self?.analyzeSegmentView.isHidden = isArchiving
+                if isArchiving {
+                    self?.contentContainerView.bringSubviewToFront(self?.ticketSegmentView ?? UIView())
+                } else {
+                    self?.contentContainerView.bringSubviewToFront(self?.analyzeSegmentView ?? UIView())
+                }
+            })
+            .disposed(by: disposeBag)
+        
+        floatingButton.rx.tap
+            .bind { [weak self] in
+                guard let self else { return }
+                self.coordinator?.presentAddMenu(from: self, actionType: .create)
+            }
+            .disposed(by: disposeBag)
+    }
+}
+
+//MARK: 기타 메서드
+private extension ArchiveViewController {
+    
+    func showPhotoPicker() {
+        let picker = UIImagePickerController()
+        picker.delegate = self
+        picker.sourceType = .photoLibrary
+        present(picker, animated: true)
+    }
+}
+
+
+//MARK: -ImagePicker
+extension ArchiveViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+    
+    func openImagePicker(completion: @escaping (UIImage) -> Void) {
+        let picker = UIImagePickerController()
+        picker.delegate = self
+        picker.sourceType = .photoLibrary
+        picker.completionHandler = completion
+        present(picker, animated: true)
+    }
+    
+    func imagePickerController(_ picker: UIImagePickerController,
+                               didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+        picker.dismiss(animated: true)
+        if let image = info[.originalImage] as? UIImage {
+            imagePickCompletion?(image)
+        }
+    }
+    
+    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+        picker.dismiss(animated: true)
     }
 }

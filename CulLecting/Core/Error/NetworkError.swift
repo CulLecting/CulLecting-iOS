@@ -12,6 +12,7 @@ public enum NetworkError: Error {
     case decodingError
     case invalidImageData
     case unknown
+    case noData
 
     public var message: String {
         switch self {
@@ -19,6 +20,7 @@ public enum NetworkError: Error {
         case .decodingError: return "응답을 해석할 수 없습니다."
         case .unknown: return "알 수 없는 오류가 발생했습니다. 관리자에게 문의하세요."
         case .invalidImageData: return "이미지 데이터 오류"
+        case .noData: return "데이터가 없습니다."
         }
     }
 }

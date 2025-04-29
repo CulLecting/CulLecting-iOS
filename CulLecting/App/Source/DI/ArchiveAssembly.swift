@@ -27,9 +27,19 @@ public struct ArchiveAssembly: Assembly {
             return ArchiveViewModel(useCase: useCase)
         }
         
-        container.register(AddTicketViewModel.self) { r in
+        container.register(SearchTicketInfoViewModel.self) { r, actionType in
             let useCase = r.resolve(ArchivingUseCase.self)!
-            return AddTicketViewModel(useCase: useCase)
+            return SearchTicketInfoViewModel(archivingUseCase: useCase, actionType: actionType)
+        }
+
+        container.register(TicketEditViewModel.self) { r, ticketId in
+            let useCase = r.resolve(ArchivingUseCase.self)!
+            return TicketEditViewModel(useCase: useCase, ticketId: ticketId)
+        }
+        
+        container.register(TicketDetailViewModel.self) { r in
+            let useCase = r.resolve(ArchivingUseCase.self)!
+            return TicketDetailViewModel(useCase: useCase)
         }
     }
 }

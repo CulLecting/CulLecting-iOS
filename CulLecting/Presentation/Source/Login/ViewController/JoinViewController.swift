@@ -58,7 +58,7 @@ class JoinViewController: UIViewController {
     
     private let nextButton = UIButton.makeButton(style: .darkButtonActive, title: "다음", cornerRadius: 28)
 
-    // MARK: - Life Cycle
+    // MARK: Life Cycle
     init(viewModel: JoinViewModel, coordinator: LoginCoordinator) {
         self.viewModel = viewModel
         self.coordinator = coordinator
