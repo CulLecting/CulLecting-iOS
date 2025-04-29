@@ -14,7 +14,7 @@ import Then
 
 
 final class AnalyzeSegmentView: UIView {
-    // MARK: - UI Components
+    // MARK: UI Components
     private let scrollView = UIScrollView()
     private let contentView = UIView()
     
@@ -59,7 +59,7 @@ final class AnalyzeSegmentView: UIView {
         $0.textColor = .grey60
     }
     
-    // MARK: - Init
+    // MARK: Init
     override init(frame: CGRect) {
         super.init(frame: frame)
     }
@@ -73,7 +73,7 @@ final class AnalyzeSegmentView: UIView {
         setUI()
     }
     
-    // MARK: - Public Configure
+    // MARK: Public Configure
     func configure(with entity: PreferenceCardEntity) {
         let hasEnoughData = entity.keywords.count >= 3
         
@@ -91,7 +91,7 @@ final class AnalyzeSegmentView: UIView {
         layoutIfNeeded()
     }
     
-    // MARK: - UI
+    // MARK: UI
     private func setUI() {
         addSubview(scrollView)
         scrollView.addSubview(contentView)

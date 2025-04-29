@@ -9,5 +9,5 @@
 public struct BaseResponse<T: Decodable>: Decodable {
     public let status: Int
     public let message: String
-    public let data: T!
+    public let data: T?
 }

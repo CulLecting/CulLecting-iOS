@@ -100,7 +100,7 @@ class OnboardingViewController: UIViewController {
     private let categoryButtonTapRelay = PublishSubject<String>()
     private let locationButtonTapRelay = PublishSubject<String>()
     
-    // MARK: - ViewModel Binding
+    // MARK: ViewModel Binding
     private func bindViewModel() {
         let input = OnboardingViewModel.Input(nextTrigger: nextTrigger.asObservable(),
                                               backTrigger: backTrigger.asObservable(),
@@ -126,7 +126,7 @@ class OnboardingViewController: UIViewController {
                     
                 case .category:
                     UIView.animate(withDuration: 0.3) {
-                        self.locationView.frame = containerFrame.offsetBy(dx: -(containerFrame.width + 40), dy: 0)
+                        self.locationView.frame = containerFrame.offsetBy(dx:(containerFrame.width + 40), dy: 0)
                         self.categoryView.frame = containerFrame
                     }
                     self.navigationItem.leftBarButtonItem = self.backButton

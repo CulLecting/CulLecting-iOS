@@ -17,7 +17,7 @@ protocol LoginViewModelProtocol {
 
 final class LoginViewModel: LoginViewModelProtocol {
 
-    // MARK: - Input & Output
+    // MARK: Input & Output
     struct Input {
         let email: Observable<String>
         let password: Observable<String>
@@ -28,7 +28,7 @@ final class LoginViewModel: LoginViewModelProtocol {
         let loginResult: Driver<Result<TokenDTO, Error>>
     }
 
-    // MARK: - 의존성
+    // MARK: 의존성
     private let authUseCase: AuthUseCase
     private let disposeBag = DisposeBag()
 

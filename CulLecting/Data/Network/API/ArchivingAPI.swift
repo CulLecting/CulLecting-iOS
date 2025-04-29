@@ -10,12 +10,17 @@ import Foundation
 import Alamofire
 
 
+import Foundation
+import Alamofire
+
 enum ArchivingAPI: URLRequestConvertible {
-    case uploadArchiving(image: Data, title: String, description: String, date: String, category: String, template: String)
+    case uploadArchiving(dto: UploadArchivingRequestDTO)
+    case uploadArchiveImg(image: Data)
     case fetchArchiving
-    case updateArchiving(id: String, title: String, description: String, date: String, category: String)
-    case updateImage(id: String, image: Data)
-    case updateTemplate(id: String, template: String)
+    case fetchSingleTicket(id: String)
+    case updateArchiving(dto: UpdateArchivingRequestDTO)
+    case updateImage(dto: UpdateImageRequestDTO)
+    case updateTemplate(dto: UpdateTemplateRequestDTO)
     case deleteArchiving(id: String)
     case getPreferenceCard
 
@@ -31,7 +36,9 @@ enum ArchivingAPI: URLRequestConvertible {
     var path: String {
         switch self {
         case .uploadArchiving: return "/archiving/upload"
+        case .uploadArchiveImg: return "/archiving/iOS/upload"
         case .fetchArchiving: return "/archiving/findarchiving"
+        case .fetchSingleTicket: return "/archiving/find"
         case .updateArchiving: return "/archiving/update"
         case .updateImage: return "/archiving/updateimage"
         case .updateTemplate: return "/archiving/updatetemplate"
@@ -41,38 +48,27 @@ enum ArchivingAPI: URLRequestConvertible {
     }
 
     var headers: HTTPHeaders {
-        var header: HTTPHeaders = [
+        var headers: HTTPHeaders = [
             "Authorization": "Bearer \(TokenStorage.shared.accessToken ?? "")"
         ]
+
         switch self {
-        case .uploadArchiving, .updateImage:
-            header.add(name: "Content-Type", value: "multipart/form-data")
-        case .updateArchiving, .updateTemplate, .deleteArchiving, .getPreferenceCard:
-            header.add(name: "Content-Type", value: "application/json")
-        case .fetchArchiving:
+        case .uploadArchiving, .uploadArchiveImg, .updateImage:
+            headers.add(name: "Content-Type", value: "multipart/form-data")
+        case .updateArchiving, .updateTemplate, .deleteArchiving:
+            headers.add(name: "Content-Type", value: "application/json")
+        case .fetchArchiving, .fetchSingleTicket, .getPreferenceCard:
             break
         }
-        return header
+        return headers
     }
 
-    var multipartFormData: MultipartFormData? {
+    var parameters: Parameters? {
         switch self {
-        case let .uploadArchiving(image, title, description, date, category, template):
-            let formData = MultipartFormData()
-            formData.append(image, withName: "image", fileName: "image.jpg", mimeType: "image/jpeg")
-            formData.append(Data(title.utf8), withName: "title")
-            formData.append(Data(description.utf8), withName: "description")
-            formData.append(Data(date.utf8), withName: "date")
-            formData.append(Data(category.utf8), withName: "category")
-            formData.append(Data(template.utf8), withName: "template")
-            return formData
-
-        case let .updateImage(id, image):
-            let formData = MultipartFormData()
-            formData.append(Data(id.utf8), withName: "id")
-            formData.append(image, withName: "image", fileName: "image.jpg", mimeType: "image/jpeg")
-            return formData
-
+        case .fetchSingleTicket(let id):
+            return ["id": id]
+        case .deleteArchiving(let id):
+            return ["id": id]
         default:
             return nil
         }
@@ -80,30 +76,14 @@ enum ArchivingAPI: URLRequestConvertible {
 
     var body: Data? {
         switch self {
-        case let .updateArchiving(id, title, desc, date, category):
-            let body = [
-                "id": id,
-                "title": title,
-                "description": desc,
-                "date": date,
-                "category": category
-            ]
-            return try? JSONSerialization.data(withJSONObject: body)
-
-        case let .updateTemplate(id, template):
-            let body = [
-                "id": id,
-                "template": template
-            ]
-            return try? JSONSerialization.data(withJSONObject: body)
-
-        case let .deleteArchiving(id):
-            let body = ["id": id]
-            return try? JSONSerialization.data(withJSONObject: body)
-
-        case .getPreferenceCard:
-            return try? JSONSerialization.data(withJSONObject: [:])
-
+        case .uploadArchiving(let dto):
+            return try? JSONEncoder().encode(dto)
+        case .updateArchiving(let dto):
+            return try? JSONEncoder().encode(dto)
+        case .updateTemplate(let dto):
+            return try? JSONEncoder().encode(dto)
+        case .updateImage(let dto):
+            return try? JSONEncoder().encode(dto)
         default:
             return nil
         }
@@ -115,11 +95,12 @@ enum ArchivingAPI: URLRequestConvertible {
         request.method = method
         request.headers = headers
 
-        if let multipart = multipartFormData {
-            return try Alamofire.URLEncoding.default.encode(request, with: nil)
+        if let params = parameters {
+            request.httpBody = try? JSONSerialization.data(withJSONObject: params)
         } else if let body = body {
             request.httpBody = body
         }
+
         return request
     }
 }

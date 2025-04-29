@@ -11,7 +11,7 @@ import Then
 
 final class TicketCarouselView: UIView, UIScrollViewDelegate {
 
-    // MARK: - Properties
+    // MARK: Properties
     private var tickets: [Ticket] = []
     private var cardViews: [TicketView] = []
     private let cardWidthRatio: CGFloat = 0.7
@@ -28,7 +28,7 @@ final class TicketCarouselView: UIView, UIScrollViewDelegate {
         $0.clipsToBounds = false
     }
 
-    // MARK: - Init
+    // MARK: Init
     override init(frame: CGRect) {
         super.init(frame: frame)
         setup()
@@ -38,7 +38,7 @@ final class TicketCarouselView: UIView, UIScrollViewDelegate {
         fatalError("init(coder:) has not been implemented")
     }
 
-    // MARK: - Public
+    // MARK: Public
     func configure(with tickets: [Ticket]) {
         self.tickets = tickets
         setNeedsLayout() // ⚠️ 이건 호출하되
@@ -47,7 +47,7 @@ final class TicketCarouselView: UIView, UIScrollViewDelegate {
         }
     }
 
-    // MARK: - UI Setup
+    // MARK: UI Setup
     private func setup() {
         addSubview(scrollView)
         scrollView.delegate = self
@@ -94,7 +94,7 @@ final class TicketCarouselView: UIView, UIScrollViewDelegate {
         scrollToIndex(index: 0, animated: false)
     }
 
-    // MARK: - Transform Logic
+    // MARK: Transform Logic
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         updateTransforms()
     }
@@ -139,7 +139,7 @@ final class TicketCarouselView: UIView, UIScrollViewDelegate {
         scrollView.setContentOffset(CGPoint(x: max(0, targetX), y: 0), animated: animated)
     }
 
-    // MARK: - Card Tap Handler
+    // MARK: Card Tap Handler
     @objc private func handleCardTap(_ gesture: UITapGestureRecognizer) {
         guard let view = gesture.view as? TicketView,
               let index = cardViews.firstIndex(of: view) else { return }

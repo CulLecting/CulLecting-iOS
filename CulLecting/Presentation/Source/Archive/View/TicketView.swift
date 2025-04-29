@@ -56,7 +56,7 @@ final class TicketView: UIView {
     private var isFront = true
     var ticket: Ticket
 
-    // MARK: - LifeCycle
+    // MARK: LifeCycle
 
     init(ticket: Ticket) {
         self.ticket = ticket
@@ -102,7 +102,7 @@ final class TicketView: UIView {
         backTextLabel.frame = backTextView.bounds.insetBy(dx: 12, dy: 12)
     }
 
-    // MARK: - UI
+    // MARK: UI
 
     private func setupUI() {
         layer.cornerRadius = 20
@@ -124,7 +124,7 @@ final class TicketView: UIView {
         blurView.contentView.addSubview(backTextView)
     }
 
-    // MARK: - Configure
+    // MARK: Configure
 
     func configure(with ticket: Ticket) {
         self.ticket = ticket
@@ -183,7 +183,7 @@ final class TicketView: UIView {
                           completion: nil)
     }
     
-    // MARK: - 이미지 로딩
+    // MARK: 이미지 로딩
     private func loadImage(from url: URL, completion: @escaping (UIImage?) -> Void) {
         URLSession.shared.dataTask(with: url) { data, _, _ in
             guard let data = data, let image = UIImage(data: data) else {
