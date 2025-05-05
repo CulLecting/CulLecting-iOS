@@ -11,9 +11,9 @@ import UIKit
 import Kingfisher
 
 
-final class TicketCell: UICollectionViewCell {
+final class SearchedImageCell: UICollectionViewCell {
     
-    static let identifier = "TicketCell"
+    static let identifier = "SearchedImageCell"
     
     private let imageView = UIImageView().then {
         $0.contentMode = .scaleAspectFill
@@ -31,8 +31,8 @@ final class TicketCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func configure(with ticket: Ticket) {
-        if let url = URL(string: ticket.imageURL) {
+    func configure(with culturalImg: CulturalImageEntity) {
+        if let url = URL(string: culturalImg.imageURL) {
             imageView.kf.setImage(with: url)
         } else {
             imageView.image = nil

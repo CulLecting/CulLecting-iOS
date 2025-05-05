@@ -6,6 +6,9 @@
 //
 
 
+import UIKit
+
+
 struct Ticket: Codable {
     let id: String
     let title: String
@@ -13,6 +16,16 @@ struct Ticket: Codable {
     let date: String
     let imageURL: String
     let category: String
-    let template: String
+    let template: TemplateType
     let averageColorHex: String
+}
+
+enum TemplateType: String, Codable {
+    case basic
+    case black
+    case white
+    case grid
+    case floral
+    case cloud
+    case swirl
 }

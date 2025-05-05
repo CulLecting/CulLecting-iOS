@@ -13,12 +13,12 @@ import Swinject
 
 public struct MypageAssembly: Assembly {
     public func assemble(container: Container) {
-        container.register(MypageRepository.self) { _ in
-            MypageRepository()
+        container.register(AuthRepository.self) { _ in
+            AuthRepository()
         }
 
         container.register(MypageUseCase.self) { r in
-            let repository = r.resolve(MypageRepository.self)!
+            let repository = r.resolve(AuthRepository.self)!
             return MypageUseCase(repository: repository)
         }
 

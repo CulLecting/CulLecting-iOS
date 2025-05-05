@@ -41,6 +41,7 @@ final class ArchiveViewController: UIViewController {
         $0.clipsToBounds = true
     }
     
+    private let containerView = UIView()
     private let contentContainerView = UIView()
     private let ticketSegmentView = TicketSegmentView()
     private let analyzeSegmentView = AnalyzeSegmentView()
@@ -68,13 +69,13 @@ final class ArchiveViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setNavigationBar()
-        setUI()
+        setupUI()
         bindViewModel()
     }
     
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        setLayout()
+        layout()
     }
 }
 
@@ -86,42 +87,52 @@ private extension ArchiveViewController {
         navigationItem.title = "내 기록"
     }
     
-    func setUI() {
-        view.backgroundColor = .white
-        view.addSubview(segmentedControl)
-        view.addSubview(contentContainerView)
-        view.addSubview(floatingButton)
-
-        contentContainerView.addSubview(ticketSegmentView)
-        contentContainerView.addSubview(analyzeSegmentView)
-
-        contentContainerView.bringSubviewToFront(ticketSegmentView)
-        analyzeSegmentView.isHidden = true
-    }
-    
-    func setLayout() {
-        segmentedControl.pin
-            .top(view.pin.safeArea.top + 12)
-            .hCenter()
-            .width(180)
-            .height(36)
+    func setupUI() {
+            view.backgroundColor = .white
+            
+            view.addSubview(containerView)
+            view.addSubview(floatingButton)
+            
+            containerView.addSubview(segmentedControl)
+            containerView.addSubview(contentContainerView)
+            
+            contentContainerView.addSubview(ticketSegmentView)
+            contentContainerView.addSubview(analyzeSegmentView)
+        }
         
-        contentContainerView.pin
-            .below(of: segmentedControl)
-            .marginTop(20)
-            .horizontally()
-            .bottom(view.pin.safeArea.bottom)
-        
-        ticketSegmentView.pin.all()
-        analyzeSegmentView.pin.all()
-        
-        floatingButton.pin
-            .bottom(view.pin.safeArea.bottom).marginBottom(20)
-            .right(view.pin.safeArea.right).marginRight(20)
-            .width(54)
-            .height(54)
-    }
+        func layout() {
+            containerView.pin
+                .top(view.pin.safeArea.top)
+                .horizontally()
+            
+            containerView.flex
+                .direction(.column)
+                .alignItems(.center)
+                .define {
+                    $0.addItem(segmentedControl)
+                        .marginTop(12)
+                        .width(180)
+                        .height(36)
+                    
+                    $0.addItem(contentContainerView)
+                        .marginTop(20)
+                        .width(100%)
+                        .grow(1)
+                }
+            
+            ticketSegmentView.pin.all()
+            analyzeSegmentView.pin.all()
+            
+            floatingButton.pin
+                .bottom(view.pin.safeArea.bottom).marginBottom(20)
+                .right(view.pin.safeArea.right).marginRight(20)
+                .width(54)
+                .height(54)
+            
+            containerView.flex.layout(mode: .adjustHeight)
+        }
 }
+
 
 // MARK: - Binding
 private extension ArchiveViewController {

@@ -17,9 +17,9 @@ protocol MypageUseCaseProtocol {
 
 final class MypageUseCase: MypageUseCaseProtocol {
 
-    private let repository: MypageRepositoryProtocol
+    private let repository: AuthRepository
 
-    init(repository: MypageRepositoryProtocol) {
+    init(repository: AuthRepository) {
         self.repository = repository
     }
 }

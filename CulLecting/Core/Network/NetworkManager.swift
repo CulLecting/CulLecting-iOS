@@ -14,11 +14,22 @@ import RxSwift
 final class NetworkManager {
     static let shared = NetworkManager()
     private init() {}
-
-    // MARK: -데이터 있는 요청
-    func request<T: Decodable>(
-        _ urlRequest: URLRequestConvertible
-    ) -> Single<T> {
+    
+    // MARK: - request with auto refresh
+    func request<T: Decodable>(_ urlRequest: URLRequestConvertible) -> Single<T> {
+        return makeRequest(urlRequest)
+            .catch { error -> Single<T> in
+                if case NetworkError.serverMessage(let message) = error,
+                   message.contains("토큰이 만료되었습니다") || message.contains("Authorization 헤더가 필요합니다.") {
+                    return self.refreshAccessToken()
+                        .flatMap { _ in self.makeRequest(urlRequest) }
+                } else {
+                    return .error(error)
+                }
+            }
+    }
+    
+    private func makeRequest<T: Decodable>(_ urlRequest: URLRequestConvertible) -> Single<T> {
         return Single.create { single in
             AF.request(urlRequest)
                 .validate()
@@ -28,17 +39,15 @@ final class NetworkManager {
                         if let data = base.data {
                             single(.success(data))
                         } else {
-                            //single(.failure(NetworkError.decodingError))
                             print("Response Data: \(String(data: response.data ?? Data(), encoding: .utf8) ?? "No data")")
                             single(.failure(NetworkError.noData))
                         }
-
                     case .failure:
                         print("NetworkManager: Request failed")
                         print("URL: \(response.request?.url?.absoluteString ?? "No URL")")
                         print("Status Code: \(response.response?.statusCode ?? 0)")
                         print("Response Data: \(String(data: response.data ?? Data(), encoding: .utf8) ?? "No data")")
-
+                        
                         if let data = response.data,
                            let errorDTO = try? JSONDecoder().decode(ErrorResponseDTO.self, from: data) {
                             single(.failure(NetworkError.serverMessage(errorDTO.message)))
@@ -50,11 +59,8 @@ final class NetworkManager {
             return Disposables.create()
         }
     }
-
-    // MARK: -데이터 없는 요청 (Void 처리)
-    func requestWithoutData(
-        _ urlRequest: URLRequestConvertible
-    ) -> Completable {
+    
+    func requestWithoutData(_ urlRequest: URLRequestConvertible) -> Completable {
         return Completable.create { completable in
             AF.request(urlRequest)
                 .validate()
@@ -62,13 +68,12 @@ final class NetworkManager {
                     switch response.result {
                     case .success:
                         completable(.completed)
-
                     case .failure:
                         print("NetworkManager: Request failed")
                         print("URL: \(response.request?.url?.absoluteString ?? "No URL")")
                         print("Status Code: \(response.response?.statusCode ?? 0)")
                         print("Response Data: \(String(data: response.data ?? Data(), encoding: .utf8) ?? "No data")")
-
+                        
                         if let data = response.data,
                            let errorDTO = try? JSONDecoder().decode(ErrorResponseDTO.self, from: data) {
                             completable(.error(NetworkError.serverMessage(errorDTO.message)))
@@ -77,6 +82,93 @@ final class NetworkManager {
                         }
                     }
                 }
+            return Disposables.create()
+        }
+    }
+    
+    // MARK: - Refresh Token
+    private func refreshAccessToken() -> Single<Void> {
+        print("AccessToken: \(TokenStorage.shared.accessToken ?? "nil")")
+        print("RefreshToken: \(TokenStorage.shared.refreshToken ?? "nil")")
+
+        return NetworkManager.shared.request(AuthAPI.refreshToken)
+            .do(onSuccess: { (token: TokenDTO) in
+                TokenStorage.shared.accessToken = token.accessToken
+                TokenStorage.shared.refreshToken = token.refreshToken
+            })
+            .map { _ in () }
+    }
+    
+    func uploadMultipart(
+        to api: URLRequestConvertible,
+        image: Data,
+        parameters: [String: Any]?
+    ) -> Completable {
+        return Completable.create { completable in
+            AF.upload(
+                multipartFormData: { multipartFormData in
+                    multipartFormData.append(image, withName: "image", fileName: "image.jpg", mimeType: "image/jpeg")
+                    parameters?.forEach { key, value in
+                        if let data = "\(value)".data(using: .utf8) {
+                            multipartFormData.append(data, withName: key)
+                        }
+                    }
+                },
+                with: api
+            )
+            .validate()
+            .response { response in
+                if let error = response.error {
+                    if let data = response.data,
+                       let errorDTO = try? JSONDecoder().decode(ErrorResponseDTO.self, from: data) {
+                        completable(.error(NetworkError.serverMessage(errorDTO.message)))
+                    } else {
+                        completable(.error(error))
+                    }
+                } else {
+                    completable(.completed)
+                }
+            }
+            return Disposables.create()
+        }
+    }
+    
+    func uploadMultipartWithResponse<T: Decodable>(
+        to api: URLRequestConvertible,
+        image: Data,
+        parameters: [String: Any]?,
+        responseType: T.Type
+    ) -> Single<T> {
+        return Single.create { single in
+            AF.upload(
+                multipartFormData: { multipartFormData in
+                    multipartFormData.append(image, withName: "image", fileName: "image.jpg", mimeType: "image/jpeg")
+                    parameters?.forEach { key, value in
+                        if let data = "\(value)".data(using: .utf8) {
+                            multipartFormData.append(data, withName: key)
+                        }
+                    }
+                },
+                with: api
+            )
+            .validate()
+            .responseDecodable(of: BaseResponse<T>.self) { response in
+                switch response.result {
+                case .success(let base):
+                    if let data = base.data {
+                        single(.success(data))
+                    } else {
+                        single(.failure(NetworkError.noData))
+                    }
+                case .failure:
+                    if let data = response.data,
+                       let errorDTO = try? JSONDecoder().decode(ErrorResponseDTO.self, from: data) {
+                        single(.failure(NetworkError.serverMessage(errorDTO.message)))
+                    } else {
+                        single(.failure(NetworkError.unknown))
+                    }
+                }
+            }
             return Disposables.create()
         }
     }

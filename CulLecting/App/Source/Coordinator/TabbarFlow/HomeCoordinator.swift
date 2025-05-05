@@ -35,6 +35,11 @@ final class HomeCoordinator: CoordinatorProtocol {
         let homeVC = HomeViewController(viewModel: viewModel, coordinator: self)
         navigationController.setViewControllers([homeVC], animated: false)
     }
+    
+    func moveToArchiveTab() {
+        parentCoordinator?.switchTab(to: .archive)
+    }
+
 }
 
 extension HomeCoordinator: HomeCoordinatorProtocol {

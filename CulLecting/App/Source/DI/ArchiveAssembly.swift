@@ -27,9 +27,16 @@ public struct ArchiveAssembly: Assembly {
             return ArchiveViewModel(useCase: useCase)
         }
         
-        container.register(SearchTicketInfoViewModel.self) { r, actionType in
-            let useCase = r.resolve(ArchivingUseCase.self)!
-            return SearchTicketInfoViewModel(archivingUseCase: useCase, actionType: actionType)
+        container.register(SearchCulturalInfoViewModel.self) { r, actionType in
+            guard let culturalRepo = r.resolve(CulturalRepositoryProtocol.self),
+                  let archivingUseCase = r.resolve(ArchivingUseCase.self) else {
+                fatalError("Dependencies not resolved")
+            }
+            return SearchCulturalInfoViewModel(
+                culturalRepository: culturalRepo,
+                archivingUseCase: archivingUseCase,
+                actionType: actionType
+            )
         }
 
         container.register(TicketEditViewModel.self) { r, ticketId in

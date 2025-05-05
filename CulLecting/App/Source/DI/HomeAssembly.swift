@@ -12,17 +12,24 @@ import Swinject
 
 public struct HomeAssembly: Assembly {
     public func assemble(container: Container) {
-        container.register(HomeRepository.self) { _ in
-            HomeRepository()
+        container.register(CulturalRepositoryProtocol.self) { _ in
+            CulturalRepository()
+        }
+        
+        container.register(ArchiveRepositoryProtocol.self) { _ in
+            ArchivingRepository()
         }
 
-        container.register(HomeUseCase.self) { r in
-            let repository = r.resolve(HomeRepository.self)!
-            return HomeUseCase(repository: repository)
+        container.register(HomeUseCaseProtocol.self) { r in
+            guard let culturalRepo = r.resolve(CulturalRepositoryProtocol.self),
+                  let archiveRepo = r.resolve(ArchiveRepositoryProtocol.self) else {
+                fatalError("Repositories not resolved")
+            }
+            return HomeUseCase(archiveRepository: archiveRepo, culturalRepository: culturalRepo)
         }
 
         container.register(HomeViewModel.self) { r in
-            let useCase = r.resolve(HomeUseCase.self)!
+            let useCase = r.resolve(HomeUseCaseProtocol.self)!
             return HomeViewModel(useCase: useCase)
         }
 

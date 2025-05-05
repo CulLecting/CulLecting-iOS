@@ -9,6 +9,9 @@ import UIKit
 
 import FlexLayout
 import PinLayout
+import RxCocoa
+import RxSwift
+import Kingfisher
 import Then
 
 final class TicketView: UIView {
@@ -131,8 +134,11 @@ final class TicketView: UIView {
         
         if let url = URL(string: ticket.imageURL) {
             loadImage(from: url) { [weak self] image in
-                self?.backgroundImageView.image = image
-                self?.thumbnailImageView.image = image
+                guard let self else { return }
+                DispatchQueue.main.async {
+                    self.backgroundImageView.image = image
+                    self.thumbnailImageView.image = image
+                }
             }
         }
         blurView.backgroundColor = UIColor.black.withAlphaComponent(0.4)

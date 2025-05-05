@@ -32,31 +32,31 @@ final class ArchiveViewModel {
     private let isArchivingRelay = BehaviorRelay<Bool>(value: true)
     let archivingList = BehaviorRelay<[Ticket]>(value: [])
     let preferenceCard = BehaviorRelay<PreferenceCardEntity?>(value: nil)
-
-
+    
+    
     init(useCase: ArchivingUseCase) {
         self.useCase = useCase
     }
     
     func transform(input: Input) -> Output {
-        // 아카이빙 데이터 불러오기
         input.fetchTrigger
             .flatMapLatest { [weak self] in
-                self?.useCase.fetchArchiving() ?? .just([])
+                self?.useCase.fetchArchiving()
+                    .asObservable() ?? .just([])
             }
             .bind(to: archivingRelay)
             .disposed(by: disposeBag)
         
-        // 취향 카드 불러오기
         input.fetchTrigger
             .flatMapLatest { [weak self] in
                 self?.useCase.getPreferenceCard()
+                    .map(Optional.init)
+                    .asObservable()
                     .catchAndReturn(nil) ?? .just(nil)
             }
             .bind(to: preferenceCardRelay)
             .disposed(by: disposeBag)
         
-        // segment index 에 따라 뷰 모드 토글
         input.segmentChanged
             .map { $0 == 0 }
             .bind(to: isArchivingRelay)

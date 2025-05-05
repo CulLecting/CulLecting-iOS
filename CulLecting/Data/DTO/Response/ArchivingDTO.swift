@@ -25,7 +25,7 @@ extension ArchivingDTO {
             date: date,
             imageURL: imageURL,
             category: category,
-            template: template,
+            template: TemplateType.basic,
             averageColorHex: "#FFFFFF" // 서버가 안주니까 기본값 세팅
         )
     }
