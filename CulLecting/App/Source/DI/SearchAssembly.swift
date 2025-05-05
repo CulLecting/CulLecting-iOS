@@ -12,12 +12,12 @@ import Swinject
 
 public struct SearchAssembly: Assembly {
     public func assemble(container: Container) {
-        container.register(SearchRepository.self) { _ in
-            SearchRepository()
+        container.register(CulturalRepositoryProtocol.self) { _ in
+            CulturalRepository()
         }
 
         container.register(SearchUseCase.self) { r in
-            let repository = r.resolve(SearchRepository.self)!
+            let repository = r.resolve(CulturalRepositoryProtocol.self)!
             return SearchUseCase(repository: repository)
         }
 

@@ -1,5 +1,5 @@
 //
-//  SearchTicketInfoViewController.swift
+//  SearchCulutralInfoViewController.swift
 //  CulLecting
 //
 //  Created by 김승희 on 4/28/25.
@@ -16,16 +16,16 @@ import RxSwift
 import Then
 
 
-final class SearchTicketInfoViewController: UIViewController {
+final class SearchCulutralInfoViewController: UIViewController {
     
     // MARK: Properties
-    private let viewModel: SearchTicketInfoViewModel
+    private let viewModel: SearchCulturalInfoViewModel
     private weak var coordinator: ArchiveCoordinator?
     private let actionType: TicketActionType
     private let disposeBag = DisposeBag()
     private let selectedImageRelay = PublishRelay<UIImage>()
     
-    private var tickets: [Ticket] = []
+    private var searchResults: [CulturalImageEntity] = []
     private var lastSearchText: String = ""
 
     // MARK: UI Components
@@ -35,12 +35,12 @@ final class SearchTicketInfoViewController: UIViewController {
     }
     
     private let collectionView = UICollectionView(frame: .zero, collectionViewLayout: UICollectionViewFlowLayout()).then {
-        $0.backgroundColor = .clear
-        $0.register(TicketCell.self, forCellWithReuseIdentifier: TicketCell.identifier)
+        $0.backgroundColor = .grey20
+        $0.register(SearchedImageCell.self, forCellWithReuseIdentifier: SearchedImageCell.identifier)
     }
     
     // MARK: Init
-    init(viewModel: SearchTicketInfoViewModel, coordinator: ArchiveCoordinator, actionType: TicketActionType) {
+    init(viewModel: SearchCulturalInfoViewModel, coordinator: ArchiveCoordinator, actionType: TicketActionType) {
         self.viewModel = viewModel
         self.coordinator = coordinator
         self.actionType = actionType
@@ -56,28 +56,31 @@ final class SearchTicketInfoViewController: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = .white
         setNavigationBar()
-        setupUI()
         bindViewModel()
     }
-}
-
-// MARK: - Bindings
-private extension SearchTicketInfoViewController {
     
-    private func bindViewModel() {
-        let input = SearchTicketInfoViewModel.Input(
-            searchTrigger: searchBar.rx.searchButtonClicked.asObservable(),
-            searchText: searchBar.rx.text.orEmpty.asObservable(),
+    override func viewDidLayoutSubviews() {
+        setupUI()
+    }
+}
+ 
+    // MARK: - Bindings
+private extension SearchCulutralInfoViewController {
+    
+    func bindViewModel() {
+        let input = SearchCulturalInfoViewModel.Input(
+            searchTextTrigger: searchBar.rx.searchButtonClicked
+                .withLatestFrom(searchBar.rx.text.orEmpty.asObservable()),
             selectImage: selectedImageRelay.asObservable()
         )
         
         let output = viewModel.transform(input: input)
         
         output.searchResults
-            .drive(onNext: { [weak self] tickets in
+            .drive(onNext: { [weak self] results in
                 guard let self else { return }
-                self.tickets = tickets
-                if tickets.isEmpty {
+                self.searchResults = results
+                if results.isEmpty {
                     self.showAlert(title: "검색 결과 없음", message: "검색된 데이터가 없습니다.\n다른 검색어를 입력해보세요.")
                 }
                 self.collectionView.reloadData()
@@ -93,17 +96,11 @@ private extension SearchTicketInfoViewController {
                 self?.coordinator?.showTicketDetail(from: ticket)
             })
             .disposed(by: disposeBag)
-        
-        searchBar.rx.text.orEmpty
-            .bind(onNext: { [weak self] text in
-                self?.lastSearchText = text
-            })
-            .disposed(by: disposeBag)
     }
 }
 
 // MARK: - Setup
-private extension SearchTicketInfoViewController {
+private extension SearchCulutralInfoViewController {
     
     func setNavigationBar() {
         navigationItem.title = "이미지 검색"
@@ -112,7 +109,9 @@ private extension SearchTicketInfoViewController {
             style: .plain,
             target: self,
             action: #selector(popViewController)
-        )
+        ).then {
+            $0.tintColor = .grey90
+        }
     }
     
     @objc func popViewController() {
@@ -147,59 +146,36 @@ private extension SearchTicketInfoViewController {
 
 
 //MARK: CollectionView
-extension SearchTicketInfoViewController: UICollectionViewDelegate, UICollectionViewDataSource {
+extension SearchCulutralInfoViewController: UICollectionViewDelegate, UICollectionViewDataSource {
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return tickets.count
+        return searchResults.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: TicketCell.identifier, for: indexPath) as? TicketCell else {
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: SearchedImageCell.identifier, for: indexPath) as? SearchedImageCell else {
             return UICollectionViewCell()
         }
-        let ticket = tickets[indexPath.item]
-        cell.configure(with: ticket)
+        let culturalImage = searchResults[indexPath.item]
+        cell.configure(with: culturalImage)
         return cell
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let ticket = tickets[indexPath.item]
+        let culturalImage = searchResults[indexPath.item]
         
-        if let url = URL(string: ticket.imageURL) {
+        if let url = URL(string: culturalImage.imageURL) {
             KingfisherManager.shared.retrieveImage(with: url) { [weak self] result in
                 guard let self else { return }
                 switch result {
                 case .success(let value):
                     DispatchQueue.main.async {
-                        switch self.actionType {
-                        case .create:
-                            self.selectedImageRelay.accept(value.image)
-                        case .edit(let ticket):
-                            self.updateTicketImage(ticketId: ticket.id, newImage: value.image)
-                        }
+                        self.selectedImageRelay.accept(value.image)
                     }
                 case .failure(let error):
                     print("이미지 로드 실패: \(error.localizedDescription)")
                 }
             }
         }
-    }
-}
-
-
-//MARK: 기타 메서드
-extension SearchTicketInfoViewController {
-    private func updateTicketImage(ticketId: String, newImage: UIImage) {
-        let useCase = coordinator?.injector.resolve(ArchivingUseCase.self)
-        
-        useCase?.updateImage(id: ticketId, image: newImage)
-            .andThen(useCase!.fetchTicket(id: ticketId))
-            .observe(on: MainScheduler.instance)
-            .subscribe(onSuccess: { [weak self] updatedTicket in
-                self?.coordinator?.showTicketDetail(from: updatedTicket)
-            }, onFailure: { error in
-                print("티켓 이미지 수정 실패: \(error.localizedDescription)")
-            })
-            .disposed(by: disposeBag)
     }
 }

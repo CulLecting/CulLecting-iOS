@@ -69,8 +69,8 @@ extension ArchiveCoordinator {
     }
     
     func showSearchTicketInfo(actionType: TicketActionType) {
-        let searchVM = injector.resolve(SearchTicketInfoViewModel.self, argument: actionType)!
-        let searchVC = SearchTicketInfoViewController(viewModel: searchVM, coordinator: self, actionType: .create)
+        let searchVM = injector.resolve(SearchCulturalInfoViewModel.self, argument: actionType)!
+        let searchVC = SearchCulutralInfoViewController(viewModel: searchVM, coordinator: self, actionType: .create)
         navigationController.pushViewController(searchVC, animated: true)
     }
     

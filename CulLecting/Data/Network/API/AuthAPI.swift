@@ -34,17 +34,17 @@ enum AuthAPI: URLRequestConvertible {
 
     var path: String {
         switch self {
-        case .login: return APIConstants.Path.login
-        case .signup: return APIConstants.Path.signup
-        case .userInfo: return APIConstants.Path.userInfo
-        case .refreshToken: return APIConstants.Path.refreshToken
-        case .sendVerificationCode: return APIConstants.Path.sendVerificationCode
-        case .verifyCode: return APIConstants.Path.verifyCode
-        case .resetPassword: return APIConstants.Path.resetPassword
-        case .confirmResetPassword: return APIConstants.Path.confirmResetPassword
-        case .changePassword: return APIConstants.Path.changePassword
-        case .logout: return APIConstants.Path.logout
-        case .deleteAccount: return APIConstants.Path.deleteAccount
+        case .login: return "/member/login"
+        case .signup: return "/member" // 기존 /member/signup → /member
+        case .userInfo: return "/member/me"
+        case .refreshToken: return "/member/token/refresh"
+        case .sendVerificationCode: return "/member/email-verifications"
+        case .verifyCode: return "/member/email-verifications/verify"
+        case .resetPassword: return "/member/password/reset-request"
+        case .confirmResetPassword: return "/member/password"
+        case .changePassword: return "/member/mypage/password"
+        case .logout: return "/member/logout"
+        case .deleteAccount: return "/member"
         }
     }
 

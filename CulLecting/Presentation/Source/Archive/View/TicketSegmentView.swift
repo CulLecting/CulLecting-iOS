@@ -14,7 +14,10 @@ import Then
 
 
 final class TicketSegmentView: UIView {
+    
     // MARK: UI Components
+    private let rootFlexContainer = UIView()
+    
     private let ticketView = TicketCarouselView()
     
     private let indexLabel = UILabel().then {
@@ -27,24 +30,24 @@ final class TicketSegmentView: UIView {
         $0.contentMode = .scaleAspectFit
         $0.isHidden = true
     }
-    
+
     // MARK: Init
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupUI()
-        setLayout()
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
     override func layoutSubviews() {
         super.layoutSubviews()
-        setLayout()
+        rootFlexContainer.pin.all()
+        rootFlexContainer.flex.layout(mode: .adjustHeight)
     }
 
-    // MARK: Public Configure
+    // MARK: Public
     func configure(with tickets: [Ticket]) {
         let hasTickets = !tickets.isEmpty
         ticketView.isHidden = !hasTickets
@@ -54,32 +57,29 @@ final class TicketSegmentView: UIView {
         if hasTickets {
             ticketView.configure(with: tickets)
             indexLabel.text = "1 / \(tickets.count)"
-            
             ticketView.scrollCallback = { [weak self] index in
                 self?.indexLabel.text = "\(index + 1) / \(tickets.count)"
             }
         }
     }
 
-    // MARK: UI
+    // MARK: Setup
     private func setupUI() {
-        addSubview(ticketView)
-        addSubview(indexLabel)
-        addSubview(addImageView)
-    }
-
-    private func setLayout() {
-        ticketView.pin
-            .top(0)
-            .horizontally(20)
-            .height(500)
-
-        indexLabel.pin
-            .below(of: ticketView)
-            .marginTop(20)
-            .sizeToFit(.width)
-            .horizontally(20)
-            .height(300)
+        addSubview(rootFlexContainer)
+        
+        rootFlexContainer.flex.direction(.column).alignItems(.center).define {
+            $0.addItem(ticketView)
+                .marginTop(0)
+                .width(100%)
+                .height(500)
+            
+            $0.addItem(indexLabel)
+                .marginTop(20)
+            
+            $0.addItem(addImageView)
+                .marginTop(40)
+                .width(180)
+                .height(180)
+        }
     }
 }
-

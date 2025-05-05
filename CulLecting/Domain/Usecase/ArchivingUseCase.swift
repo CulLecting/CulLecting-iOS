@@ -20,63 +20,77 @@ protocol ArchivingUseCaseProtocol {
     func updateArchiving(id: String, title: String, description: String, date: String, category: String) -> Completable
     func updateImage(id: String, image: UIImage) -> Completable
     func updateTemplate(id: String, template: String) -> Completable
-    func getPreferenceCard() -> Single<PreferenceCardEntity?>
+    func getPreferenceCard() -> Single<PreferenceCardEntity>
 }
 
 final class ArchivingUseCase: ArchivingUseCaseProtocol {
-    
-    private let repository: ArchivingRepository
-    
-    init(repository: ArchivingRepository = ArchivingRepository()) {
+    private let repository: ArchiveRepositoryProtocol
+
+    init(repository: ArchiveRepositoryProtocol = ArchivingRepository()) {
         self.repository = repository
     }
-    
+
     func uploadArchiving(image: UIImage, title: String, description: String, date: String, category: String, template: String) -> Completable {
-        return repository.uploadArchiving(image: image, title: title, description: description, date: date, category: category, template: template)
+        guard let imageData = image.jpegData(compressionQuality: 0.8) else {
+            return .error(NetworkError.invalidImageData)
+        }
+
+        let dto = UploadArchivingRequestDTO(
+            image: imageData,
+            title: title,
+            description: description,
+            date: date,
+            category: category,
+            template: template
+        )
+        return repository.uploadArchiving(dto: dto)
     }
-    
-    //TODO: api 주면 수정
+
     func uploadArchiveImg(image: UIImage) -> Single<String> {
-        return Single.just("0")
+        return repository.uploadArchiveImg(image: image)
     }
-    
+
     func fetchArchiving() -> Single<[Ticket]> {
         return repository.fetchArchiving()
+            .catch { error in
+                if case NetworkError.serverMessage(let message) = error,
+                   message.contains("등록된 아카이빙 데이터가 없습니다") {
+                    return .just([])
+                }
+                return .error(error)
+            }
     }
-    
-    //TODO: api 주면 수정
+
     func fetchTicket(id: String) -> Single<Ticket> {
-        let dummyTicket = Ticket(
-            id: id,
-            title: "더미 티켓",
-            description: "이건 목 데이터입니다.",
-            date: "2025-05-01",
-            imageURL: "https://example.com/dummy.jpg",
-            category: "전시/미술",
-            template: "basic",
-            averageColorHex: "#FFFFFF"
-        )
-        return Single.just(dummyTicket)
+        return repository.fetchTicket(id: id)
     }
-    
+
     func deleteArchiving(id: String) -> Completable {
         return repository.deleteArchiving(id: id)
     }
-    
+
     func updateArchiving(id: String, title: String, description: String, date: String, category: String) -> Completable {
-        return repository.updateArchiving(id: id, title: title, description: description, date: date, category: category)
+        let dto = UpdateArchivingRequestDTO(
+            id: id,
+            title: title,
+            description: description,
+            date: date,
+            category: category
+        )
+        return repository.updateArchiving(dto: dto)
     }
-    
+
     func updateImage(id: String, image: UIImage) -> Completable {
         return repository.updateImage(id: id, image: image)
     }
-    
+
     func updateTemplate(id: String, template: String) -> Completable {
-        return repository.updateTemplate(id: id, template: template)
+        let dto = UpdateTemplateRequestDTO(id: id, template: template)
+        return repository.updateTemplate(dto: dto)
     }
-    
-    func getPreferenceCard() -> Single<PreferenceCardEntity?> {
-        return NetworkManager.shared.request(ArchivingAPI.getPreferenceCard)
-            .map { Optional($0) }
+
+    func getPreferenceCard() -> Single<PreferenceCardEntity> {
+        return repository.getPreferenceCard()
     }
 }
+

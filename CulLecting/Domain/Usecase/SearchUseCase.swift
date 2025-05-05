@@ -17,9 +17,9 @@ protocol SearchUseCaseProtocol {
 
 final class SearchUseCase: SearchUseCaseProtocol {
 
-    private let repository: SearchRepositoryProtocol
+    private let repository: CulturalRepositoryProtocol
 
-    init(repository: SearchRepositoryProtocol) {
+    init(repository: CulturalRepositoryProtocol) {
         self.repository = repository
     }
 }

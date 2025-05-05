@@ -108,8 +108,10 @@ final class TicketEditViewController: UIViewController {
     
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
+        
         rootContainer.pin.all(view.pin.safeArea)
-        contentContainer.pin.width(of: rootContainer).sizeToFit(.width)
+        contentContainer.pin.width(of: rootContainer).layout()
+        contentContainer.flex.layout(mode: .adjustHeight)
         rootContainer.contentSize = contentContainer.frame.size
     }
 }
@@ -161,22 +163,32 @@ private extension TicketEditViewController {
     
     //MARK: -Setup
 private extension TicketEditViewController {
-    func setupUI() {
+    private func setupUI() {
         view.addSubview(rootContainer)
         rootContainer.addSubview(contentContainer)
         
         contentContainer.flex
-            .padding(20)
+            .paddingHorizontal(20)
+            .paddingTop(24)
             .define {
+                $0.addItem(titleLabel).marginBottom(8)
                 $0.addItem(titleTextField).height(44)
-                $0.addItem(categoryButton).marginTop(12).height(44)
-                $0.addItem(dateSelectButton).marginTop(12).height(44)
+                
+                $0.addItem(categoryLabel).marginTop(16).marginBottom(8)
+                $0.addItem(categoryButton).height(44)
+                
+                $0.addItem(dateLabel).marginTop(16).marginBottom(8)
+                $0.addItem(dateSelectButton).height(44)
+                
                 $0.addItem(datePicker).marginTop(8)
-                $0.addItem(backTextView).marginTop(12).height(120)
-                $0.addItem(saveButton).marginTop(20).height(56)
+                
+                $0.addItem(backTextLabel).marginTop(16).marginBottom(8)
+                $0.addItem(backTextView).height(120)
+                
+                $0.addItem(saveButton).marginTop(32).height(56)
             }
     }
-    
+
     func layoutUI() {
         rootContainer.pin.all(view.pin.safeArea)
         contentContainer.pin.width(of: rootContainer).sizeToFit(.width)

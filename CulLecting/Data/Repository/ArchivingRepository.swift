@@ -8,100 +8,84 @@
 
 import UIKit
 
+import Alamofire
 import RxSwift
 
 
-import UIKit
-import RxSwift
+final class ArchivingRepository: ArchiveRepositoryProtocol {
 
-final class ArchivingRepository: ArchivingRepositoryProtocol {
-    
-    func uploadArchiving(image: UIImage, title: String, description: String, date: String, category: String, template: String) -> Completable {
-        guard let imageData = image.jpegData(compressionQuality: 0.8) else {
-            return .error(NetworkError.invalidImageData)
-        }
-        let dto = UploadArchivingRequestDTO(
-            image: imageData,
-            title: title,
-            description: description,
-            date: date,
-            category: category,
-            template: template
+    func uploadArchiving(dto: UploadArchivingRequestDTO) -> Completable {
+        return NetworkManager.shared.uploadMultipart(
+            to: ArchivingAPI.uploadArchiving,
+            image: dto.image,
+            parameters: [
+                "title": dto.title,
+                "description": dto.description,
+                "date": dto.date,
+                "category": dto.category,
+                "template": dto.template
+            ]
         )
-        return NetworkManager.shared
-            .requestWithoutData(ArchivingAPI.uploadArchiving(dto: dto))
     }
 
     func uploadArchiveImg(image: UIImage) -> Single<String> {
         guard let imageData = image.jpegData(compressionQuality: 0.8) else {
             return .error(NetworkError.invalidImageData)
         }
-        return NetworkManager.shared
-            .request(ArchivingAPI.uploadArchiveImg(image: imageData))
-            .map { (response: UploadArchiveImgResponseDTO) in
-                return response.data.id
-            }
+
+        return NetworkManager.shared.uploadMultipartWithResponse(
+            to: ArchivingAPI.uploadArchiveImg,
+            image: imageData,
+            parameters: nil,
+            responseType: UploadArchiveImgResponseDTO.self
+        )
+        .map { $0.data.id }
     }
 
     func fetchArchiving() -> Single<[Ticket]> {
-        return (NetworkManager.shared
-                .request(ArchivingAPI.fetchArchiving) as Single<[ArchivingDTO]>)
-            .map { $0.map { $0.mapping() } }
-            .catch { error in
-                if case NetworkError.noData = error {
-                    return Single.just([])
-                }
-                return Single.error(error)
-            }
-    }
-
-    func fetchSingleTicket(id: String) -> Single<Ticket> {
-        return (NetworkManager.shared
-            .request(ArchivingAPI.fetchSingleTicket(id: id)) as Single<ArchivingDTO>)
-            .map { $0.mapping() }
-    }
-
-    func updateArchiving(id: String, title: String, description: String, date: String, category: String) -> Completable {
-        let dto = UpdateArchivingRequestDTO(
-            id: id,
-            title: title,
-            description: description,
-            date: date,
-            category: category
-        )
         return NetworkManager.shared
-            .requestWithoutData(ArchivingAPI.updateArchiving(dto: dto))
+            .request(ArchivingAPI.fetchArchiving) as Single<[Ticket]>
+    }
+
+    func fetchTicket(id: String) -> Single<Ticket> {
+        return NetworkManager.shared
+            .request(ArchivingAPI.fetchSingleTicket(id: id)) as Single<Ticket>
+    }
+
+    func updateArchiving(dto: UpdateArchivingRequestDTO) -> Completable {
+        return NetworkManager.shared.requestWithoutData(
+            ArchivingAPI.updateArchiving(id: dto.id, dto: dto)
+        )
     }
 
     func updateImage(id: String, image: UIImage) -> Completable {
         guard let imageData = image.jpegData(compressionQuality: 0.8) else {
             return .error(NetworkError.invalidImageData)
         }
-        let dto = UpdateImageRequestDTO(id: id, image: imageData)
-        return NetworkManager.shared
-            .requestWithoutData(ArchivingAPI.updateImage(dto: dto))
+
+        return NetworkManager.shared.uploadMultipart(
+            to: ArchivingAPI.updateImage(id: id),
+            image: imageData,
+            parameters: nil
+        )
     }
 
-    func updateTemplate(id: String, template: String) -> Completable {
-        let dto = UpdateTemplateRequestDTO(id: id, template: template)
-        return NetworkManager.shared
-            .requestWithoutData(ArchivingAPI.updateTemplate(dto: dto))
+    func updateTemplate(dto: UpdateTemplateRequestDTO) -> Completable {
+        return NetworkManager.shared.requestWithoutData(
+            ArchivingAPI.updateTemplate(id: dto.id, template: dto.template)
+        )
     }
 
     func deleteArchiving(id: String) -> Completable {
-        return NetworkManager.shared
-            .requestWithoutData(ArchivingAPI.deleteArchiving(id: id))
+        return NetworkManager.shared.requestWithoutData(
+            ArchivingAPI.deleteArchiving(id: id)
+        )
     }
 
     func getPreferenceCard() -> Single<PreferenceCardEntity> {
         return (NetworkManager.shared
             .request(ArchivingAPI.getPreferenceCard) as Single<PreferenceCardDTO>)
-        .map { $0.mapping() }
-        .catch { error in
-            if case NetworkError.noData = error {
-                return Single.just(PreferenceCardEntity(keywords: [], culturalCount: 0, manyCategory: ""))
-            }
-            return Single.error(error)
-        }
+            .map { $0.mapping() }
     }
 }
+

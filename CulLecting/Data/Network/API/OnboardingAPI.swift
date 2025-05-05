@@ -24,7 +24,7 @@ enum OnboardingAPI: URLRequestConvertible {
     var path: String {
         switch self {
         case .updateOnboarding:
-            return APIConstants.Path.updateOnboarding
+            return "/member/onboarding"
         }
     }
     

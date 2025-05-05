@@ -63,13 +63,15 @@ public final class TabbarCoordinator: CoordinatorProtocol {
 }
 
 // MARK: - Private Methods
-private extension TabbarCoordinator {
+extension TabbarCoordinator {
     
     func setupChildCoordinators() {
         let homeCoordinator = HomeCoordinator(injector: dependency.injector)
         let archiveCoordinator = ArchiveCoordinator(injector: dependency.injector)
         let searchCoordinator = SearchCoordinator(injector: dependency.injector)
         let myPageCoordinator = MypageCoordinator(injector: dependency.injector)
+        
+        homeCoordinator.parentCoordinator = self
         
         childCoordinators = [
             homeCoordinator,
@@ -103,4 +105,20 @@ private extension TabbarCoordinator {
         tabBarController.tabBar.layer.shadowRadius = 4
         tabBarController.tabBar.layer.masksToBounds = false
     }
+    
+    func switchTab(to type: CoordinatorType) {
+        switch type {
+        case .home:
+            tabBarController.selectedIndex = 0
+        case .archive:
+            tabBarController.selectedIndex = 1
+        case .search:
+            tabBarController.selectedIndex = 2
+        case .mypage:
+            tabBarController.selectedIndex = 3
+        default:
+            break
+        }
+    }
+
 }

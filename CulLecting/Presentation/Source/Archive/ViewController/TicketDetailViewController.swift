@@ -66,13 +66,14 @@ private extension TicketDetailViewController {
         ticketView.pin
             .top(view.pin.safeArea.top + 20)
             .horizontally(20)
-            .height(400)
+            .height(60%)
+            .width(90%)
         
         editButton.pin
             .below(of: ticketView, aligned: .center)
-            .marginTop(20)
-            .width(120)
-            .height(44)
+            .marginTop(30)
+            .width(90%)
+            .height(56)
     }
     
     func setNavigationBar() {
@@ -81,14 +82,14 @@ private extension TicketDetailViewController {
             style: .plain,
             target: self,
             action: #selector(backButtonTapped)
-        )
+        ).then { $0.tintColor = .grey90 }
         
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             image: UIImage(systemName: "ellipsis"),
             style: .plain,
             target: self,
             action: #selector(optionsButtonTapped)
-        )
+        ).then { $0.tintColor = .grey90 }
     }
     
     @objc func backButtonTapped() {
