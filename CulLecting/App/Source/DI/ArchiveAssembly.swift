@@ -39,9 +39,9 @@ public struct ArchiveAssembly: Assembly {
             )
         }
 
-        container.register(TicketEditViewModel.self) { r, ticketId in
+        container.register(TicketEditViewModel.self) { r, ticket in
             let useCase = r.resolve(ArchivingUseCase.self)!
-            return TicketEditViewModel(useCase: useCase, ticketId: ticketId)
+            return TicketEditViewModel(useCase: useCase, ticket: ticket)
         }
         
         container.register(TicketDetailViewModel.self) { r in

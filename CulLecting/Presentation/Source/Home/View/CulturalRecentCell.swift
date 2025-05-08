@@ -42,7 +42,7 @@ final class CulturalRecentCell: UICollectionViewCell {
         $0.textColor = .gray
     }
     
-    // MARK: Init
+    // MARK: init
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupUI()

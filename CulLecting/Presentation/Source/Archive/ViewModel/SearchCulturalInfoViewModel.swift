@@ -14,7 +14,7 @@ import RxSwift
 
 final class SearchCulturalInfoViewModel {
     struct Input {
-        let searchTextTrigger: Observable<String>  // 검색어
+        let searchTextTrigger: Observable<String>
         let selectImage: Observable<UIImage>
     }
     
@@ -62,10 +62,16 @@ final class SearchCulturalInfoViewModel {
         input.selectImage
             .flatMapLatest { [weak self] image -> Observable<Ticket> in
                 guard let self else { return .empty() }
-                return self.handleImageSelection(image: image).asObservable()
+                return self.handleImageSelection(image: image)
+                    .asObservable()
+                    .catch { error in
+                        print("이미지 등록 에러:", error)
+                        return .empty()
+                    }
             }
             .bind(to: uploadCompletedRelay)
             .disposed(by: disposeBag)
+        
         
         return Output(
             searchResults: searchResultsRelay.asDriver(),

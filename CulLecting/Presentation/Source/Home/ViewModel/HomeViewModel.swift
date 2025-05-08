@@ -42,7 +42,7 @@ final class HomeViewModel {
         return formatter
     }()
 
-    // MARK: Init
+    // MARK: init
     init(useCase: HomeUseCaseProtocol) {
         self.useCase = useCase
     }
@@ -51,7 +51,7 @@ final class HomeViewModel {
     func transform(input: Input) -> Output {
         input.viewWillAppearTrigger
             .subscribe(onNext: { [weak self] in
-                self?.fetchMyTickets()
+                self?.fetchArchiving()
                 self?.fetchRecommendCulturals()
                 self?.fetchLatestCulturals()
                 self?.updateSelectedDate(Date())
@@ -75,12 +75,12 @@ final class HomeViewModel {
     }
     
     // MARK: Fetch Methods
-    private func fetchMyTickets() {
-        useCase.fetchMyArchivingTickets()
+    private func fetchArchiving() {
+        useCase.fetchArchiving()
             .subscribe(onSuccess: { [weak self] tickets in
                 self?.myTicketsRelay.accept(tickets)
             }, onFailure: { error in
-                print("🎫 아카이빙 티켓 로딩 실패: \(error)")
+                print("아카이빙 티켓 로딩 실패: \(error)")
             })
             .disposed(by: disposeBag)
     }
@@ -90,7 +90,7 @@ final class HomeViewModel {
             .subscribe(onSuccess: { [weak self] contents in
                 self?.recommendCulturalsRelay.accept(contents)
             }, onFailure: { error in
-                print("🌟 추천 콘텐츠 로딩 실패: \(error)")
+                print("추천 콘텐츠 로딩 실패: \(error)")
             })
             .disposed(by: disposeBag)
     }
@@ -100,7 +100,7 @@ final class HomeViewModel {
             .subscribe(onSuccess: { [weak self] contents in
                 self?.latestCulturalsRelay.accept(contents)
             }, onFailure: { error in
-                print("🆕 최근 콘텐츠 로딩 실패: \(error)")
+                print("최근 콘텐츠 로딩 실패: \(error)")
             })
             .disposed(by: disposeBag)
     }

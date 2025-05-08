@@ -8,8 +8,8 @@
 
 struct ArchivingDTO: Decodable {
     let id: String
-    let title: String
-    let description: String
+    let title: String?
+    let description: String?
     let date: String
     let imageURL: String
     let category: String
@@ -20,8 +20,8 @@ extension ArchivingDTO {
     func mapping() -> Ticket {
         return Ticket(
             id: id,
-            title: title,
-            description: description,
+            title: title ?? "",
+            description: description ?? "",
             date: date,
             imageURL: imageURL,
             category: category,
@@ -29,4 +29,8 @@ extension ArchivingDTO {
             averageColorHex: "#FFFFFF" // 서버가 안주니까 기본값 세팅
         )
     }
+}
+
+struct UploadArchiveImgResponseDTO: Decodable {
+    let id: String
 }

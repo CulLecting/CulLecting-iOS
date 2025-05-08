@@ -14,6 +14,7 @@ public protocol LoginCoordinatorProtocol: CoordinatorProtocol {
     func didLoginSuccess()
     func showJoinView()
     func showOnboardingFlow()
+    func showResetPassword()
 }
 
 public final class LoginCoordinator: LoginCoordinatorProtocol {
@@ -43,6 +44,7 @@ public final class LoginCoordinator: LoginCoordinatorProtocol {
     }
     
     public func didLoginSuccess() {
+        print("didloginsuccess called")
         parentCoordinator?.didLoggedIn()
     }
     
@@ -55,5 +57,10 @@ public final class LoginCoordinator: LoginCoordinatorProtocol {
     public func showOnboardingFlow() {
         parentCoordinator?.showOnboardingFlow()
     }
-
+    
+    public func showResetPassword() {
+        guard let viewModel = container.resolve(ResetPasswordViewModel.self) else { return }
+        let resetVC = ResetPasswordViewController(viewModel: viewModel, coordinator: self)
+        navigationController.pushViewController(resetVC, animated: true)
+    }
 }

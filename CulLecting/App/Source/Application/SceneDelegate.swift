@@ -16,18 +16,20 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     var assembler: Assembler!
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
+        let hasSeenOnboarding = UserDefaults.standard.bool(forKey: "hasSeenOnboarding")
+        print("UserDefaults.hasSeenOnboarding: \(hasSeenOnboarding)")
 
         guard let windowScene = (scene as? UIWindowScene) else { return }
         let window = UIWindow(windowScene: windowScene)
         self.window = window
         
+        //TokenStorage.shared.clearAll()
+        
         // Assembler에 전체 AppAssembly에 등록된 전체 DI 구성을 등록
         assembler = Assembler([AppAssembly()])
         // assembler에 등록된 Container를 resolve
         let container = assembler.resolver
-        
         let navigationController = UINavigationController()
-        
         window.rootViewController = navigationController
         
         // AppCoordinatorProtocol 타입의 객체를 resolve, 미리 AppAssembly에 등록한 AppCoordinator 구현체를 찾아서 생성

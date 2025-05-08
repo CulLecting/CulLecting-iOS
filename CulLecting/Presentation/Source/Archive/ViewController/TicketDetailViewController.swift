@@ -16,18 +16,24 @@ import Then
 
 
 final class TicketDetailViewController: UIViewController {
-    
+
     // MARK: Properties
     private let disposeBag = DisposeBag()
     private let viewModel: TicketDetailViewModel
     private let coordinator: ArchiveCoordinator
     private var ticket: Ticket
-    
+    private var isFlipped = false
+
     // MARK: UI Components
-    private lazy var ticketView = TicketView(ticket: ticket)
+    private var ticketContainerView = UIView()
+    private lazy var ticketFrontView = TicketFrontView(ticket: ticket)
+    private lazy var ticketBackView = TicketBackView(ticket: ticket)
+    private let flipIcon = UIImageView(image: UIImage.rotateButton).then {
+        $0.isUserInteractionEnabled = true
+    }
     private let editButton = UIButton.makeButton(style: .darkButtonActive, title: "내용 수정하기", cornerRadius: 28)
-    
-    // MARK: Init
+
+    // MARK: init
     init(viewModel: TicketDetailViewModel, ticket: Ticket, coordinator: ArchiveCoordinator) {
         self.viewModel = viewModel
         self.ticket = ticket
@@ -38,15 +44,15 @@ final class TicketDetailViewController: UIViewController {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
-    // MARK: View LifeCycle
+
+    // MARK: LifeCycle
     override func viewDidLoad() {
         super.viewDidLoad()
         setUI()
         setNavigationBar()
         bindViewModel()
     }
-    
+
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         layoutUI()
@@ -55,27 +61,45 @@ final class TicketDetailViewController: UIViewController {
 
 // MARK: - UI
 private extension TicketDetailViewController {
-    
-    func setUI() {
+
+    private func setUI() {
         view.backgroundColor = .white
-        view.addSubview(ticketView)
+        view.addSubview(ticketContainerView)
+        view.addSubview(flipIcon)
         view.addSubview(editButton)
+        
+        [ticketFrontView, ticketBackView].forEach {ticketContainerView.addSubview($0)}
+        
+        ticketBackView.isHidden = true
+        
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(flipCard))
+        ticketContainerView.addGestureRecognizer(tapGesture)
     }
-    
+
     func layoutUI() {
-        ticketView.pin
+        ticketContainerView.pin
             .top(view.pin.safeArea.top + 20)
             .horizontally(20)
             .height(60%)
-            .width(90%)
+        
+        ticketFrontView.frame = ticketContainerView.bounds
+        ticketBackView.frame = ticketContainerView.bounds
+        
+        flipIcon.pin
+            .below(of: ticketFrontView)
+            .marginTop(12)
+            .hCenter()
+            .width(32)
+            .height(48)
         
         editButton.pin
-            .below(of: ticketView, aligned: .center)
-            .marginTop(30)
+            .below(of: flipIcon)
+            .marginTop(20)
+            .hCenter()
             .width(90%)
             .height(56)
     }
-    
+
     func setNavigationBar() {
         navigationItem.leftBarButtonItem = UIBarButtonItem(
             image: UIImage(systemName: "chevron.left"),
@@ -83,7 +107,7 @@ private extension TicketDetailViewController {
             target: self,
             action: #selector(backButtonTapped)
         ).then { $0.tintColor = .grey90 }
-        
+
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             image: UIImage(systemName: "ellipsis"),
             style: .plain,
@@ -91,25 +115,33 @@ private extension TicketDetailViewController {
             action: #selector(optionsButtonTapped)
         ).then { $0.tintColor = .grey90 }
     }
-    
+
     @objc func backButtonTapped() {
         navigationController?.popViewController(animated: true)
     }
-    
+
     @objc private func optionsButtonTapped() {
         coordinator.presentAddMenu(from: self, actionType: .edit(ticket: ticket))
     }
-    
-    func presentShareSheet() {
-        let items: [Any] = ["\(ticket.title)\n\(ticket.description)"]
-        let activityVC = UIActivityViewController(activityItems: items, applicationActivities: nil)
-        present(activityVC, animated: true)
+
+    @objc private func flipCard() {
+        print("flipCard 실행됨")
+        let fromView = isFlipped ? ticketBackView : ticketFrontView
+        let toView = isFlipped ? ticketFrontView : ticketBackView
+
+        UIView.transition(from: fromView,
+                          to: toView,
+                          duration: 0.6,
+                          options: [.transitionFlipFromRight, .showHideTransitionViews],
+                          completion: nil)
+
+        isFlipped.toggle()
     }
 }
 
-// MARK: - Binding
+// MARK: - ViewModel Binding
 private extension TicketDetailViewController {
-    
+
     func bindViewModel() {
         let input = TicketDetailViewModel.Input(
             editTrigger: editButton.rx.tap.asObservable()
@@ -127,10 +159,12 @@ private extension TicketDetailViewController {
             .disposed(by: disposeBag)
         
         output.ticketUpdated
-            .withUnretained(self)
-            .bind(onNext: { owner, updatedTicket in
-                owner.ticket = updatedTicket
-                owner.ticketView.update(ticket: updatedTicket)
+            .observe(on: MainScheduler.instance)
+            .bind(onNext: { [weak self] updatedTicket in
+                guard let self else { return }
+                self.ticket = updatedTicket
+                self.ticketFrontView.configure(with: updatedTicket)
+                self.ticketBackView.configure(with: updatedTicket)
             })
             .disposed(by: disposeBag)
     }

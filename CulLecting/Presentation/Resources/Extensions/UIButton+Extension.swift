@@ -105,23 +105,27 @@ extension UIButton {
         self.layoutIfNeeded()
     }
     
-//    static func mypageButton(title: String, icon: UIImage) -> UIButton {
-//        let attributedsString = NSMutableAttributedString(string: title)
-//        let imageAttachment = NSTextAttachment()
-//        imageAttachment.image = icon
-//        imageAttachment.bounds = CGRect(x: 0, y: 0, width: 24, height: 24)
-//        attributedsString.append(NSAttributedString(attachment: imageAttachment))
-//        attributedsString.append(NSAttributedString(string: title))
-//        
-//
-//        let button = UIButton().then {
-//            //위의 attributestring을 text로 등록
-//            $0.titleLabel?.font = UIFont.fontPretendard(style: .title16M)
-//            $0.titleLabel?.textColor = .grey90
-//            // 오른쪽 이미지를 setimage로 등록 (chevron.right, 색상은 grey90)
-//            $0.layer.cornerRadius = 20
-//        }
-//        return button
-//    }
+    ///Picker Style 버튼
+    func applyPickerStyle(title: String = "선택해주세요") {
+            self.setTitle(title, for: .normal)
+            self.setTitleColor(.grey50, for: .normal)
+            self.titleLabel?.font = .systemFont(ofSize: 14)
+            self.backgroundColor = .grey10
+            self.layer.cornerRadius = 17
+            self.contentHorizontalAlignment = .left
+            self.contentEdgeInsets = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 40)
+
+            let chevron = UIImageView(image: UIImage(systemName: "chevron.right"))
+            chevron.tintColor = .grey50
+            chevron.translatesAutoresizingMaskIntoConstraints = false
+            self.addSubview(chevron)
+
+            NSLayoutConstraint.activate([
+                chevron.centerYAnchor.constraint(equalTo: self.centerYAnchor),
+                chevron.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16)
+            ])
+
+            self.heightAnchor.constraint(equalToConstant: 56).isActive = true
+        }
 }
 

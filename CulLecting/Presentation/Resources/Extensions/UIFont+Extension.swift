@@ -8,6 +8,8 @@
 import UIKit
 
 enum FontStyle {
+    case bold32B
+    case title18B
     case title18SB
     case title18R
     case title16SB
@@ -30,6 +32,14 @@ extension UIFont {
         let fontweight: UIFont.Weight
         
         switch style {
+        case .bold32B:
+            fontsize = 32
+            fontweight = .bold
+            
+        case .title18B:
+            fontsize = 18
+            fontweight = .bold
+            
         case .title18SB:
             fontsize = 18
             fontweight = .semibold

@@ -19,6 +19,7 @@ enum AuthAPI: URLRequestConvertible {
     case verifyCode(email: String, code: String)
     case resetPassword(email: String)
     case confirmResetPassword(dto: ResetPasswordDTO, token: String)
+    case changeNickname(nickname: String)
     case changePassword(before: String, new: String)
     case logout
     case deleteAccount
@@ -27,6 +28,10 @@ enum AuthAPI: URLRequestConvertible {
         switch self {
         case .userInfo:
             return .get
+        case .deleteAccount:
+            return .delete
+        case .confirmResetPassword, .changeNickname, .changePassword:
+            return .patch
         default:
             return .post
         }
@@ -35,13 +40,14 @@ enum AuthAPI: URLRequestConvertible {
     var path: String {
         switch self {
         case .login: return "/member/login"
-        case .signup: return "/member" // 기존 /member/signup → /member
+        case .signup: return "/member"
         case .userInfo: return "/member/me"
         case .refreshToken: return "/member/token/refresh"
         case .sendVerificationCode: return "/member/email-verifications"
         case .verifyCode: return "/member/email-verifications/verify"
         case .resetPassword: return "/member/password/reset-request"
         case .confirmResetPassword: return "/member/password"
+        case .changeNickname: return "member/nickname"
         case .changePassword: return "/member/mypage/password"
         case .logout: return "/member/logout"
         case .deleteAccount: return "/member"

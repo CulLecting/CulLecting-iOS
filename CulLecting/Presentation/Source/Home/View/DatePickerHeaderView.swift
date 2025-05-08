@@ -44,6 +44,9 @@ final class DatePickerHeaderView: UIView {
         $0.font = .boldSystemFont(ofSize: 18)
         $0.textAlignment = .center
         $0.textColor = .grey90
+        $0.adjustsFontSizeToFitWidth = true
+        $0.minimumScaleFactor = 0.8
+        $0.lineBreakMode = .byTruncatingTail
     }
     
     private let daysCollectionView: UICollectionView = {
@@ -59,7 +62,7 @@ final class DatePickerHeaderView: UIView {
         return collectionView
     }()
     
-    // MARK: Init
+    // MARK: init
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupUI()
@@ -90,20 +93,20 @@ final class DatePickerHeaderView: UIView {
         super.layoutSubviews()
 
         titleLabel.sizeToFit()
-        titleLabel.pin.top(0).left(16).right(16).height(22)
+        titleLabel.pin.top(0).height(22)
 
         monthLabel.sizeToFit()
         monthLabel.pin
             .below(of: titleLabel)
             .marginTop(12)
-            .hCenter()
+            .horizontally(20)
             .height(40)
 
         leftButton.sizeToFit()
         rightButton.sizeToFit()
 
-        leftButton.pin.left(16).vCenter(to: monthLabel.edge.vCenter)
-        rightButton.pin.right(16).vCenter(to: monthLabel.edge.vCenter)
+        leftButton.pin.left(0).vCenter(to: monthLabel.edge.vCenter)
+        rightButton.pin.right(0).vCenter(to: monthLabel.edge.vCenter)
 
         daysCollectionView.pin
             .below(of: monthLabel)
@@ -161,8 +164,12 @@ final class DatePickerHeaderView: UIView {
         guard let todayIndex = days.firstIndex(where: { calendar.isDateInToday($0) }) else { return }
         
         let indexPath = IndexPath(item: todayIndex, section: 0)
-        daysCollectionView.selectItem(at: indexPath, animated: false, scrollPosition: [])
-        collectionView(daysCollectionView, didSelectItemAt: indexPath)
+        
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.daysCollectionView.selectItem(at: indexPath, animated: false, scrollPosition: .centeredHorizontally)
+            self.collectionView(daysCollectionView, didSelectItemAt: indexPath)
+        }
     }
 }
 

@@ -26,17 +26,17 @@ final class LoginViewModel: LoginViewModelProtocol {
 
     struct Output {
         let loginResult: Driver<Result<TokenDTO, Error>>
+        let isFormValid: Driver<Bool>
     }
 
     // MARK: 의존성
     private let authUseCase: AuthUseCase
-    private let disposeBag = DisposeBag()
 
     init(useCase: AuthUseCase) {
         self.authUseCase = useCase
     }
 
-    //MARK: protocol
+    // MARK: Transform
     func transform(input: Input) -> Output {
         let result = input.loginTap
             .withLatestFrom(Observable.combineLatest(input.email, input.password))
@@ -49,6 +49,12 @@ final class LoginViewModel: LoginViewModelProtocol {
             }
             .asDriver(onErrorDriveWith: .empty())
 
-        return Output(loginResult: result)
+        let isFormValid = Observable
+            .combineLatest(input.email, input.password)
+            .map { !$0.isEmpty && !$1.isEmpty }
+            .distinctUntilChanged()
+            .asDriver(onErrorJustReturn: false)
+
+        return Output(loginResult: result, isFormValid: isFormValid)
     }
 }

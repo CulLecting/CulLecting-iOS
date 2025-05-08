@@ -34,26 +34,9 @@ class LoginViewController: UIViewController {
     
     private lazy var pwTextField = UITextField.makeTextField(style: .defaultStyle, placeholderText: "비밀번호 입력").then {
         $0.textContentType = .password
-        $0.rightView = hidePwButton
-        $0.rightViewMode = .always
         $0.isSecureTextEntry = true
+        $0.enablePasswordToggle()
     }
-    
-    private lazy var hidePwButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setImage(UIImage.pwEyeSlash, for: .normal)
-        button.tintColor = .grey60
-        button.addAction(UIAction(handler: { [weak self, weak button] _ in
-            guard let self = self, let button = button else { return }
-            self.pwTextField.isSecureTextEntry.toggle()
-            let toggleImg = self.pwTextField.isSecureTextEntry ? "pwEyeSlash" : "pwEye"
-            button.setImage(UIImage(named: toggleImg), for: .normal)
-        }), for: .primaryActionTriggered)
-        // button.imageEdgeInsets = .init(top: 0, left: 0, bottom: 0, right: 10)
-        return button
-    }()
-    
-    private let rightPaddingView = UIView(frame: CGRect(x: 0, y: 0, width: 10, height: 44))
 
     private let resetPwButton = UIButton().then {
         var config = UIButton.Configuration.plain()
@@ -135,8 +118,24 @@ class LoginViewController: UIViewController {
                     self.coordinator?.didLoginSuccess()
                 case .failure(let error):
                     print("로그인 실패: \(error.localizedDescription)")
+                    self.showAlert(title: "로그인 실패", message: "로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.")
                 }
             })
+            .disposed(by: disposeBag)
+        
+        output.isFormValid
+            .drive(onNext: { [weak self] isValid in
+                let style: BarButtonStyle = isValid ? .darkButtonActive : .darkButtonDisabled
+                self?.loginButton.applyBarButtonStyle(style)
+                self?.loginButton.isEnabled = isValid
+            })
+            .disposed(by: disposeBag)
+        
+        resetPwButton.rx.tap
+            .bind { [weak self] in
+                guard let self = self else { return }
+                self.coordinator?.showResetPassword()
+            }
             .disposed(by: disposeBag)
     }
     

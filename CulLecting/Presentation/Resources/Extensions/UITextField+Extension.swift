@@ -56,4 +56,26 @@ extension UITextField {
         
         return textField
     }
+    
+    /// 눈모양 비밀번호 토글버튼 추가
+    func enablePasswordToggle() {
+            let toggleButton = UIButton(type: .system)
+        toggleButton.setImage(UIImage.pwEyeSlash, for: .normal)
+            toggleButton.tintColor = .grey60
+            toggleButton.frame = CGRect(x: 0, y: 0, width: 40, height: 40)
+
+            toggleButton.addAction(UIAction(handler: { [weak self] _ in
+                guard let self = self else { return }
+                self.isSecureTextEntry.toggle()
+                let imageName = self.isSecureTextEntry ? "pwEyeSlash" : "pwEye"
+                toggleButton.setImage(UIImage(named: imageName), for: .normal)
+            }), for: .touchUpInside)
+
+            let container = UIView(frame: CGRect(x: 0, y: 0, width: 50, height: 40))
+            container.addSubview(toggleButton)
+            toggleButton.pin.right(10).vCenter()
+
+            self.rightView = container
+            self.rightViewMode = .always
+        }
 }
