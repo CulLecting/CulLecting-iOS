@@ -71,6 +71,16 @@ class LoginViewController: UIViewController {
         }), for: .touchUpInside)
     }
     
+    private lazy var guestButton = UIButton.makeTextButton(
+        title: "둘러보기",
+        titleColor: .primary50,
+        font: .fontPretendard(style: .body14M),
+        underline: .underlineFalse).then {
+            $0.addAction(UIAction(handler: { [weak self] _ in
+                self?.coordinator?.continueAsGuest()
+            }), for: .touchUpInside)
+        }
+    
     //MARK: LifeCycle
     override func viewDidLoad() {
         print("LoginViewController DidLoaded")
@@ -82,8 +92,13 @@ class LoginViewController: UIViewController {
     
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        loginContainerView.pin.all(view.pin.safeArea)        
+        loginContainerView.pin.all(view.pin.safeArea)
         loginContainerView.flex.layout()
+        
+        guestButton.pin
+            .top(view.pin.safeArea.top).marginTop(0)
+            .right(view.pin.safeArea.right).marginRight(16)
+            .sizeToFit()
     }
     
     init(viewModel: LoginViewModel, coordinator: LoginCoordinatorProtocol?) {
@@ -146,6 +161,7 @@ class LoginViewController: UIViewController {
     
     private func setUI() {
         view.addSubview(loginContainerView)
+        view.addSubview(guestButton)
         
         loginContainerView
             .flex

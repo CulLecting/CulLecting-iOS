@@ -205,10 +205,18 @@ private extension ArchiveViewController {
         
         floatingButton.rx.tap
             .bind { [weak self] in
-                guard let self else { return }
-                self.coordinator?.presentAddMenu(from: self, actionType: .create)
+                guard let self = self else { return }
+                if TokenStorage.shared.accessToken == nil {
+                    self.showAlert(
+                        title: "알림",
+                        message: "가입하고 내 문화생활을 컬렉팅 해보세요!"
+                    )
+                } else {
+                    self.coordinator?.presentAddMenu(from: self, actionType: .create)
+                }
             }
             .disposed(by: disposeBag)
+        
         
         output.imageUploadCompleted
             .emit(onNext: { [weak self] ticket in

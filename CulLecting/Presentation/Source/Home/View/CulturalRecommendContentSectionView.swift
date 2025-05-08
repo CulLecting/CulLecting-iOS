@@ -35,6 +35,15 @@ final class CulturalRecommendContentSectionView: UIView {
             layout.sectionInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
         }
     }
+    
+    private let guestMessageLabel = UILabel().then {
+        $0.text = "컬렉팅에 가입하고\n 맞춤 컨텐츠를 추천받아보세요!"
+        $0.font = .fontPretendard(style: .body14M)
+        $0.textColor = .grey70
+        $0.textAlignment = .center
+        $0.numberOfLines = 2
+        $0.isHidden = true
+    }
 
     // MARK: Data
     private var contents: [CulturalContentEntity] = []
@@ -44,6 +53,7 @@ final class CulturalRecommendContentSectionView: UIView {
         super.init(frame: frame)
         addSubview(titleLabel)
         addSubview(collectionView)
+        addSubview(guestMessageLabel)
         collectionView.dataSource = self
     }
 
@@ -51,20 +61,43 @@ final class CulturalRecommendContentSectionView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
 
+    // MARK: Public
+    func configure(with contents: [CulturalContentEntity]) {
+        self.contents = contents
+        let hasData = !contents.isEmpty
+        
+        collectionView.isHidden     = !hasData
+        guestMessageLabel.isHidden  =  hasData
+        
+        if hasData {
+            collectionView.reloadData()
+        }
+        
+        setNeedsLayout()
+    }
+
     // MARK: Layout
     override func layoutSubviews() {
         super.layoutSubviews()
         titleLabel.pin.top().horizontally(16).height(22)
-        collectionView.pin.below(of: titleLabel).horizontally().marginTop(10).height(260)
-        self.pin.height(collectionView.frame.maxY)
+
+        if contents.isEmpty {
+            guestMessageLabel.pin
+                .below(of: titleLabel)
+                .horizontally(16)
+                .marginTop(20)
+                .sizeToFit(.width)
+            self.pin.height(guestMessageLabel.frame.maxY)
+        } else {
+            collectionView.pin
+                .below(of: titleLabel)
+                .horizontally()
+                .marginTop(10)
+                .height(260)
+            self.pin.height(collectionView.frame.maxY)
+        }
     }
 
-    // MARK: Public
-    func configure(with contents: [CulturalContentEntity]) {
-        self.contents = contents
-        collectionView.reloadData()
-        setNeedsLayout()
-    }
 }
 
 extension CulturalRecommendContentSectionView: UICollectionViewDataSource {

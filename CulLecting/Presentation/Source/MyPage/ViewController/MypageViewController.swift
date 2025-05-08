@@ -159,6 +159,14 @@ public class MypageViewController: UIViewController {
 extension MypageViewController {
     private func setupBinding() {
         print("SetupBinding 호출됨")
+        
+        if TokenStorage.shared.accessToken == nil {
+            userName.text = "Guest 님"
+            logoutButton.isHidden = true
+            exitButton.isHidden   = true
+            return
+        }
+        
         logoutButton.rx.tap
             .subscribe(onNext: { [weak self] in
                 self?.showAlertWithCancel(
