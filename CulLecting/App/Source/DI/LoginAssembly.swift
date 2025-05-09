@@ -33,6 +33,11 @@ struct LoginAssembly: Assembly {
             return JoinViewModel(useCase: useCase)
         }
         
+        container.register(ResetPasswordViewModel.self) { r in
+            let useCase = r.resolve(AuthUseCase.self)!
+            return ResetPasswordViewModel(useCase: useCase)
+        }
+        
         container.register(LoginCoordinator.self) { (r, navigationController: UINavigationController) in
             return LoginCoordinator(navigationController: navigationController, container: r)
         }

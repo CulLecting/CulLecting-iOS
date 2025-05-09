@@ -35,7 +35,7 @@ final class CulturalContentHorizontalView: UIView {
         $0.register(CulturalContentHorizontalCell.self, forCellWithReuseIdentifier: CulturalContentHorizontalCell.identifier)
     }
 
-    // MARK: Init
+    // MARK: init
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupUI()

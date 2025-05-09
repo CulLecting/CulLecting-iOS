@@ -19,7 +19,7 @@ public struct MypageAssembly: Assembly {
 
         container.register(MypageUseCase.self) { r in
             let repository = r.resolve(AuthRepository.self)!
-            return MypageUseCase(repository: repository)
+            return MypageUseCase(authRepository: repository)
         }
 
         container.register(MypageViewModel.self) { r in

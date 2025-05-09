@@ -39,7 +39,7 @@ final class SearchCulutralInfoViewController: UIViewController {
         $0.register(SearchedImageCell.self, forCellWithReuseIdentifier: SearchedImageCell.identifier)
     }
     
-    // MARK: Init
+    // MARK: init
     init(viewModel: SearchCulturalInfoViewModel, coordinator: ArchiveCoordinator, actionType: TicketActionType) {
         self.viewModel = viewModel
         self.coordinator = coordinator
@@ -70,30 +70,37 @@ private extension SearchCulutralInfoViewController {
     func bindViewModel() {
         let input = SearchCulturalInfoViewModel.Input(
             searchTextTrigger: searchBar.rx.searchButtonClicked
-                .withLatestFrom(searchBar.rx.text.orEmpty.asObservable()),
+                .withLatestFrom(searchBar.rx.text.orEmpty)
+                .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty },
             selectImage: selectedImageRelay.asObservable()
         )
         
         let output = viewModel.transform(input: input)
         
         output.searchResults
+            .skip(1)
             .drive(onNext: { [weak self] results in
                 guard let self else { return }
                 self.searchResults = results
-                if results.isEmpty {
+                
+                let currentSearchText = self.searchBar.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+                if results.isEmpty && currentSearchText != self.searchBar.placeholder {
                     self.showAlert(title: "검색 결과 없음", message: "검색된 데이터가 없습니다.\n다른 검색어를 입력해보세요.")
                 }
+
                 self.collectionView.reloadData()
             })
             .disposed(by: disposeBag)
-        
+
         output.isLoading
             .drive()
             .disposed(by: disposeBag)
         
         output.uploadCompleted
             .emit(onNext: { [weak self] ticket in
-                self?.coordinator?.showTicketDetail(from: ticket)
+                guard let self else { return }
+                self.showAlert(title: "업로드 성공!", message: "티켓 상세페이지에서 내용을 수정해보세요.")
             })
             .disposed(by: disposeBag)
     }

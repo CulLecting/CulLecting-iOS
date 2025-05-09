@@ -18,8 +18,8 @@ public enum CoordinatorType {
 enum TabItem: Int, CaseIterable {
     case home
     case archive
-    case search
     case myPage
+    case search
 
     var title: String {
         switch self {

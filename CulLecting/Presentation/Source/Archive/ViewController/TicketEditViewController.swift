@@ -24,72 +24,70 @@ final class TicketEditViewController: UIViewController {
     
     var onSaveCompleted: ((Ticket) -> Void)?
     private let selectedImageRelay = BehaviorRelay<UIImage?>(value: nil)
+    private let selectedDateRelay: BehaviorRelay<String>
+    private let selectedCategoryRelay: BehaviorRelay<String>
     
-    //MARK: UI Components
+    // MARK: UI Components
     private let rootContainer = UIScrollView()
     private let contentContainer = UIView()
     
     private let titleLabel = UILabel().then {
         $0.text = "어떤 행사였나요?"
-        $0.font = .systemFont(ofSize: 16, weight: .semibold)
+        $0.font = .fontPretendard(style: .caption12M)
+        $0.textColor = .grey80
     }
     
-    private let titleTextField = UITextField.makeTextField(style: .defaultStyle, placeholderText: "행사 제목을 입력하세요")
+    private let titleTextField = UITextField.makeTextField(style: .defaultStyle, placeholderText: "행사 제목을 입력하세요").then {
+        $0.heightAnchor.constraint(equalToConstant: 56).isActive = true
+        $0.backgroundColor = .grey10
+        $0.layer.cornerRadius = 17
+    }
     
     private let categoryLabel = UILabel().then {
         $0.text = "문화 카테고리"
-        $0.font = .systemFont(ofSize: 16, weight: .semibold)
+        $0.font = .fontPretendard(style: .caption12M)
+        $0.textColor = .grey80
     }
     
     private let categoryButton = UIButton().then {
-        $0.setTitle("카테고리 선택", for: .normal)
-        $0.setTitleColor(.grey70, for: .normal)
-        $0.titleLabel?.font = .fontPretendard(style: .body14R)
-        $0.backgroundColor = .grey20
-        $0.layer.cornerRadius = 10
-        $0.contentHorizontalAlignment = .left
+        $0.applyPickerStyle(title: "카테고리 선택")
     }
     
     private let dateLabel = UILabel().then {
         $0.text = "언제 다녀오셨나요?"
-        $0.font = .systemFont(ofSize: 16, weight: .semibold)
+        $0.font = .fontPretendard(style: .caption12M)
+        $0.textColor = .grey80
     }
     
     private let dateSelectButton = UIButton().then {
-        $0.setTitle("날짜 선택", for: .normal)
-        $0.setTitleColor(.grey70, for: .normal)
-        $0.titleLabel?.font = .fontPretendard(style: .body14R)
-        $0.backgroundColor = .grey20
-        $0.layer.cornerRadius = 10
-        $0.contentHorizontalAlignment = .left
-    }
-    
-    private let datePicker = UIDatePicker().then {
-        $0.datePickerMode = .date
-        $0.preferredDatePickerStyle = .wheels
-        $0.locale = Locale(identifier: "ko_KR")
-        $0.isHidden = true
+        $0.applyPickerStyle(title: "날짜 선택")
     }
     
     private let backTextLabel = UILabel().then {
-        $0.text = "뒷면 텍스트"
+        $0.text = "어떤 기억이 남았나요?"
         $0.font = .systemFont(ofSize: 16, weight: .semibold)
     }
     
     private let backTextView = UITextView().then {
-        $0.font = .systemFont(ofSize: 14)
-        $0.layer.cornerRadius = 8
-        $0.layer.borderColor = UIColor.lightGray.cgColor
-        $0.layer.borderWidth = 1
-        $0.textContainerInset = UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
+        $0.font = .fontPretendard(style: .body14M)
+        $0.textColor = .grey90
+        $0.backgroundColor = .grey10
+        $0.layer.cornerRadius = 17
+        $0.textContainerInset = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
+        $0.isScrollEnabled = false
     }
     
     private let saveButton = UIButton.makeButton(style: .darkButtonActive, title: "수정하기", cornerRadius: 28)
     
-    // MARK: Init
+    
+    // MARK: init
     init(ticket: Ticket, viewModel: TicketEditViewModel) {
         self.ticket = ticket
         self.viewModel = viewModel
+        
+        self.selectedDateRelay = BehaviorRelay(value: ticket.date)
+        self.selectedCategoryRelay = BehaviorRelay(value: ticket.category)
+        
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -97,12 +95,14 @@ final class TicketEditViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
     
-    // MARK: View LifeCycle
+    
+    // MARK: LifeCycle
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
         setupUI()
         setupData()
+        setupActions()
         bindViewModel()
     }
     
@@ -116,35 +116,29 @@ final class TicketEditViewController: UIViewController {
     }
 }
 
-//MARK: -Bind
+
+// MARK: - Bind
 private extension TicketEditViewController {
     func bindViewModel() {
         let titleInput = titleTextField.rx.text.orEmpty.asObservable()
         let descriptionInput = backTextView.rx.text.orEmpty.asObservable()
-        let dateInput = datePicker.rx.date
-            .map { DateFormatter().then { $0.dateFormat = "yyyy-MM-dd" }.string(from: $0) }
-            .asObservable()
-        let categoryInput = categoryButton.rx.tap
-            .map { [weak self] in self?.categoryButton.title(for: .normal) ?? "" }
-            .asObservable()
-//        let imageInput = selectedImageRelay.asObservable()
+        
         let saveTrigger = saveButton.rx.tap.asObservable()
-
+        
         let input = TicketEditViewModel.Input(
             titleInput: titleInput,
             descriptionInput: descriptionInput,
-            dateInput: dateInput,
-            categoryInput: categoryInput,
+            dateInput: selectedDateRelay.asObservable(),
+            categoryInput: selectedCategoryRelay.asObservable(),
             saveTrigger: saveTrigger
         )
         
         let output = viewModel.transform(input: input)
         
-        output.saveCompleted
-            .drive(onNext: { [weak self] in
+        output.updatedTicket
+            .drive(onNext: { [weak self] updatedTicket in
                 guard let self else { return }
-                self.onSaveCompleted?(self.ticket)
-                self.dismiss(animated: true)
+                self.onSaveCompleted?(updatedTicket)
             })
             .disposed(by: disposeBag)
         
@@ -153,17 +147,13 @@ private extension TicketEditViewController {
                 print("수정 실패: \(error.localizedDescription)")
             })
             .disposed(by: disposeBag)
-        
-        output.enableSave
-            .drive(saveButton.rx.isEnabled)
-            .disposed(by: disposeBag)
     }
 }
 
-    
-    //MARK: -Setup
+
+// MARK: - Setup
 private extension TicketEditViewController {
-    private func setupUI() {
+    func setupUI() {
         view.addSubview(rootContainer)
         rootContainer.addSubview(contentContainer)
         
@@ -172,27 +162,19 @@ private extension TicketEditViewController {
             .paddingTop(24)
             .define {
                 $0.addItem(titleLabel).marginBottom(8)
-                $0.addItem(titleTextField).height(44)
+                $0.addItem(titleTextField).height(56)
                 
-                $0.addItem(categoryLabel).marginTop(16).marginBottom(8)
-                $0.addItem(categoryButton).height(44)
+                $0.addItem(categoryLabel).marginTop(28).marginBottom(8)
+                $0.addItem(categoryButton).height(56)
                 
-                $0.addItem(dateLabel).marginTop(16).marginBottom(8)
-                $0.addItem(dateSelectButton).height(44)
+                $0.addItem(dateLabel).marginTop(28).marginBottom(8)
+                $0.addItem(dateSelectButton).height(56)
                 
-                $0.addItem(datePicker).marginTop(8)
-                
-                $0.addItem(backTextLabel).marginTop(16).marginBottom(8)
-                $0.addItem(backTextView).height(120)
+                $0.addItem(backTextLabel).marginTop(28).marginBottom(8)
+                $0.addItem(backTextView).height(220)
                 
                 $0.addItem(saveButton).marginTop(32).height(56)
             }
-    }
-
-    func layoutUI() {
-        rootContainer.pin.all(view.pin.safeArea)
-        contentContainer.pin.width(of: rootContainer).sizeToFit(.width)
-        rootContainer.contentSize = contentContainer.frame.size
     }
     
     func setupData() {
@@ -203,25 +185,55 @@ private extension TicketEditViewController {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         if let date = formatter.date(from: ticket.date) {
-            datePicker.date = date
             updateDateButtonTitle(with: date)
         }
     }
     
     func setupActions() {
         dateSelectButton.addAction(UIAction { [weak self] _ in
-            self?.datePicker.isHidden.toggle()
+            self?.presentDatePickerModal()
         }, for: .touchUpInside)
         
-        datePicker.addTarget(self, action: #selector(dateChanged), for: .valueChanged)
-        
         categoryButton.addAction(UIAction { [weak self] _ in
-            self?.presentCategoryPicker()
+            self?.presentCategoryModal()
         }, for: .touchUpInside)
     }
     
-    @objc func dateChanged() {
-        updateDateButtonTitle(with: datePicker.date)
+    private func presentDatePickerModal() {
+        let vc = DatePickerBottomSheet()
+        vc.onDateSelected = { [weak self] date in
+            guard let self else { return }
+            self.updateDateButtonTitle(with: date)
+
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd"
+            self.selectedDateRelay.accept(formatter.string(from: date))
+        }
+        
+        let nav = UINavigationController(rootViewController: vc)
+        if let sheet = nav.sheetPresentationController {
+            sheet.detents = [.medium()]
+            sheet.prefersGrabberVisible = true
+        }
+        
+        present(nav, animated: true)
+    }
+    
+    private func presentCategoryModal() {
+        let vc = CategoryBottomSheet()
+        vc.onCategorySelected = { [weak self] category in
+            guard let self else { return }
+            self.categoryButton.setTitle(category, for: .normal)
+            self.selectedCategoryRelay.accept(category)
+        }
+
+        let nav = UINavigationController(rootViewController: vc)
+        if let sheet = nav.sheetPresentationController {
+            sheet.detents = [.medium()]
+            sheet.prefersGrabberVisible = true
+        }
+
+        present(nav, animated: true)
     }
     
     func updateDateButtonTitle(with date: Date) {
@@ -230,21 +242,5 @@ private extension TicketEditViewController {
         formatter.locale = Locale(identifier: "ko_KR")
         let dateString = formatter.string(from: date)
         dateSelectButton.setTitle(dateString, for: .normal)
-    }
-    
-    private func presentCategoryPicker() {
-        let alert = UIAlertController(title: "카테고리 선택", message: nil, preferredStyle: .actionSheet)
-        
-        Category.allCases.forEach { category in
-            let action = UIAlertAction(title: category.rawValue, style: .default) { [weak self] _ in
-                self?.categoryButton.setTitle(category.rawValue, for: .normal)
-            }
-            alert.addAction(action)
-        }
-        
-        let cancelAction = UIAlertAction(title: "취소", style: .cancel, handler: nil)
-        alert.addAction(cancelAction)
-        
-        present(alert, animated: true)
     }
 }

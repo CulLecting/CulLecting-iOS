@@ -47,7 +47,7 @@ enum ArchivingAPI: URLRequestConvertible {
         case .fetchArchiving:
             return "/archivings"
         case .fetchSingleTicket(let id):
-            return "/archivhgs/\(id)"
+            return "/archivings/\(id)"
         case .updateArchiving(let id, _):
             return "/archivings/\(id)"
         case .updateImage(let id):

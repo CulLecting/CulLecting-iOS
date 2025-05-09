@@ -126,7 +126,7 @@ class OnboardingViewController: UIViewController {
                     
                 case .category:
                     UIView.animate(withDuration: 0.3) {
-                        self.locationView.frame = containerFrame.offsetBy(dx:(containerFrame.width + 40), dy: 0)
+                        self.locationView.frame = containerFrame.offsetBy(dx: -(containerFrame.width + 40), dy: 0)
                         self.categoryView.frame = containerFrame
                     }
                     self.navigationItem.leftBarButtonItem = self.backButton

@@ -12,7 +12,7 @@ import Swinject
 
 public final class TabbarCoordinator: CoordinatorProtocol {
     
-    // MARK: - Dependency
+    // MARK: Dependency
     public struct Dependency {
         let navigationController: UINavigationController
         let injector: Resolver
@@ -29,7 +29,7 @@ public final class TabbarCoordinator: CoordinatorProtocol {
         }
     }
     
-    // MARK: - Properties
+    // MARK: Properties
     public var childCoordinators: [CoordinatorProtocol] = []
     public var navigationController: UINavigationController
     public var type: CoordinatorType = .tabbar
@@ -39,13 +39,13 @@ public final class TabbarCoordinator: CoordinatorProtocol {
     private let dependency: Dependency
     private let tabBarController = UITabBarController()
     
-    // MARK: - Init
+    // MARK: init
     public init(dependency: Dependency) {
         self.dependency = dependency
         self.navigationController = dependency.navigationController
     }
     
-    // MARK: - Start
+    // MARK: Start
     public func start() {
         setupChildCoordinators()
         setupTabBarController()
@@ -54,7 +54,7 @@ public final class TabbarCoordinator: CoordinatorProtocol {
         navigationController.setViewControllers([tabBarController], animated: false)
     }
     
-    // MARK: - Finish
+    // MARK: Finish
     public func finish() {
         childCoordinators.forEach { $0.finish() }
         childCoordinators.removeAll()
@@ -62,7 +62,7 @@ public final class TabbarCoordinator: CoordinatorProtocol {
     }
 }
 
-// MARK: - Private Methods
+// MARK: methods
 extension TabbarCoordinator {
     
     func setupChildCoordinators() {
@@ -72,11 +72,14 @@ extension TabbarCoordinator {
         let myPageCoordinator = MypageCoordinator(injector: dependency.injector)
         
         homeCoordinator.parentCoordinator = self
+        archiveCoordinator.parentCoordinator = self
+        searchCoordinator.parentCoordinator = self
+        myPageCoordinator.parentCoordinator = self
         
         childCoordinators = [
             homeCoordinator,
             archiveCoordinator,
-            searchCoordinator,
+            //searchCoordinator,
             myPageCoordinator
         ]
         
@@ -112,13 +115,32 @@ extension TabbarCoordinator {
             tabBarController.selectedIndex = 0
         case .archive:
             tabBarController.selectedIndex = 1
-        case .search:
-            tabBarController.selectedIndex = 2
+//        case .search:
+//            tabBarController.selectedIndex = 2
         case .mypage:
-            tabBarController.selectedIndex = 3
+            tabBarController.selectedIndex = 2
         default:
             break
         }
+    }
+    
+    func logoutAndStartLoginFlow() {
+        print("logoutAndStartLoginFlow called")
+
+        childCoordinators.forEach { $0.finish() }
+        childCoordinators.removeAll()
+
+        let loginNav = UINavigationController()
+        let loginCoordinator = LoginCoordinator(
+            navigationController: loginNav,
+            container: dependency.injector
+        )
+        
+        loginCoordinator.parentCoordinator = self.parentCoordinator
+        childCoordinators.append(loginCoordinator)
+        loginCoordinator.start()
+
+        self.parentCoordinator?.replaceRootViewController(with: loginNav)
     }
 
 }
