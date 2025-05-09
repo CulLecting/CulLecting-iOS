@@ -64,29 +64,35 @@ final class CulturalRecommendContentSectionView: UIView {
     // MARK: Public
     func configure(with contents: [CulturalContentEntity]) {
         self.contents = contents
-        let hasData = !contents.isEmpty
-        
-        collectionView.isHidden     = !hasData
-        guestMessageLabel.isHidden  =  hasData
-        
-        if hasData {
+        let isMember = TokenStorage.shared.accessToken != nil
+
+        collectionView.isHidden    = !isMember
+        guestMessageLabel.isHidden =  isMember
+
+        if isMember {
             collectionView.reloadData()
         }
-        
         setNeedsLayout()
     }
 
     // MARK: Layout
     override func layoutSubviews() {
         super.layoutSubviews()
-        titleLabel.pin.top().horizontally(16).height(22)
-
-        if contents.isEmpty {
+        
+        titleLabel.pin
+            .top()
+            .horizontally(16)
+            .height(22)
+        
+        let isMember = TokenStorage.shared.accessToken != nil
+        
+        if !isMember {
             guestMessageLabel.pin
                 .below(of: titleLabel)
                 .horizontally(16)
                 .marginTop(20)
                 .sizeToFit(.width)
+            
             self.pin.height(guestMessageLabel.frame.maxY)
         } else {
             collectionView.pin
@@ -94,10 +100,10 @@ final class CulturalRecommendContentSectionView: UIView {
                 .horizontally()
                 .marginTop(10)
                 .height(260)
+            
             self.pin.height(collectionView.frame.maxY)
         }
     }
-
 }
 
 extension CulturalRecommendContentSectionView: UICollectionViewDataSource {

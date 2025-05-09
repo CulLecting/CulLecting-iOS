@@ -23,6 +23,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         let window = UIWindow(windowScene: windowScene)
         self.window = window
         
+        /// keyboard 포커싱 해제 메서드
+        let tap = UITapGestureRecognizer(target: window, action: #selector(UIView.endEditing(_:)))
+        tap.cancelsTouchesInView = false
+        window.addGestureRecognizer(tap)
+        
         //TokenStorage.shared.clearAll()
         
         // Assembler에 전체 AppAssembly에 등록된 전체 DI 구성을 등록

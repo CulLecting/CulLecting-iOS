@@ -9,6 +9,7 @@
 import UIKit
 
 import FlexLayout
+import Photos
 import PinLayout
 import RxCocoa
 import RxSwift
@@ -232,6 +233,32 @@ private extension ArchiveViewController {
 
 // MARK: - Image Picker
 extension ArchiveViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+
+    func openImagePicker(actionType: TicketActionType, completion: @escaping (UIImage) -> Void) {
+        imagePickCompletion = completion
+        currentActionType = actionType
+        checkPhotoLibraryPermission()
+    }
+    
+    private func checkPhotoLibraryPermission() {
+        let status = PHPhotoLibrary.authorizationStatus()
+        switch status {
+        case .authorized, .limited:
+            showPhotoPicker()
+        case .notDetermined:
+            PHPhotoLibrary.requestAuthorization { newStatus in
+                DispatchQueue.main.async {
+                    if newStatus == .authorized || newStatus == .limited {
+                        self.showPhotoPicker()
+                    } else {
+                        self.presentPermissionDeniedAlert()
+                    }
+                }
+            }
+        default:
+            presentPermissionDeniedAlert()
+        }
+    }
     
     func showPhotoPicker() {
         let picker = UIImagePickerController()
@@ -240,10 +267,19 @@ extension ArchiveViewController: UIImagePickerControllerDelegate, UINavigationCo
         present(picker, animated: true)
     }
     
-    func openImagePicker(actionType: TicketActionType, completion: @escaping (UIImage) -> Void) {
-        imagePickCompletion = completion
-        currentActionType = actionType
-        showPhotoPicker()
+    private func presentPermissionDeniedAlert() {
+        // showAlertWithCancel이 이미 정의되어 있으니 재사용
+        showAlertWithCancel(
+            title: "사진 권한 필요",
+            message: "앨범에 접근하려면 사진 권한을 허용해주세요.",
+            okTitle: "설정으로 이동",
+            cancelTitle: "취소",
+            okHandler: {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            }
+        )
     }
     
     func imagePickerController(_ picker: UIImagePickerController,

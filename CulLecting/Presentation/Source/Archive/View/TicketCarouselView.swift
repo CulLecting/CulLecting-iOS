@@ -155,6 +155,7 @@ final class TicketCarouselView: UIView, UIScrollViewDelegate {
         let targetX = cardX - (bounds.width - cardWidth) / 2
 
         scrollView.setContentOffset(CGPoint(x: max(0, targetX), y: 0), animated: animated)
+        scrollCallback?(index)
     }
     
     //MARK: 티켓 핸들러
