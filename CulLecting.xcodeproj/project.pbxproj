@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A2ECAB462DCC89D400D244D9 /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = A2ECAB452DCC89D400D244D9 /* SnapKit */; };
 		CC2E99B02D9288CB000B1476 /* .gitignore in Resources */ = {isa = PBXBuildFile; fileRef = CC2E99AF2D9288C5000B1476 /* .gitignore */; };
 		CC3980EF2D951A4500C9103D /* Swinject in Frameworks */ = {isa = PBXBuildFile; productRef = CC3980EE2D951A4500C9103D /* Swinject */; };
 		CC3980F22D951A9300C9103D /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = CC3980F12D951A9300C9103D /* Alamofire */; };
@@ -61,16 +62,6 @@
 			path = CulLecting;
 			sourceTree = "<group>";
 		};
-		CC2E99942D9287B4000B1476 /* CulLectingTests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = CulLectingTests;
-			sourceTree = "<group>";
-		};
-		CC2E999E2D9287B4000B1476 /* CulLectingUITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = CulLectingUITests;
-			sourceTree = "<group>";
-		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -84,6 +75,7 @@
 				CC7E24D02DAA908E00397F76 /* RxCocoa in Frameworks */,
 				CC98547D2D9519D5007397DA /* FlexLayout in Frameworks */,
 				CC3980EF2D951A4500C9103D /* Swinject in Frameworks */,
+				A2ECAB462DCC89D400D244D9 /* SnapKit in Frameworks */,
 				CC7E24D22DAA908E00397F76 /* RxSwift in Frameworks */,
 				CC3980F52D951ADE00C9103D /* Kingfisher in Frameworks */,
 			);
@@ -111,8 +103,6 @@
 			children = (
 				CC2E99AF2D9288C5000B1476 /* .gitignore */,
 				CC2E997A2D9287B2000B1476 /* CulLecting */,
-				CC2E99942D9287B4000B1476 /* CulLectingTests */,
-				CC2E999E2D9287B4000B1476 /* CulLectingUITests */,
 				CC2E99792D9287B2000B1476 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -155,6 +145,7 @@
 				CC3982002DA130F400C9103D /* Then */,
 				CC7E24CF2DAA908E00397F76 /* RxCocoa */,
 				CC7E24D12DAA908E00397F76 /* RxSwift */,
+				A2ECAB452DCC89D400D244D9 /* SnapKit */,
 			);
 			productName = CulLecting;
 			productReference = CC2E99782D9287B2000B1476 /* CulLecting.app */;
@@ -172,9 +163,6 @@
 			);
 			dependencies = (
 				CC2E99932D9287B4000B1476 /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				CC2E99942D9287B4000B1476 /* CulLectingTests */,
 			);
 			name = CulLectingTests;
 			packageProductDependencies = (
@@ -195,9 +183,6 @@
 			);
 			dependencies = (
 				CC2E999D2D9287B4000B1476 /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				CC2E999E2D9287B4000B1476 /* CulLectingUITests */,
 			);
 			name = CulLectingUITests;
 			packageProductDependencies = (
@@ -247,6 +232,7 @@
 				CC3980F32D951ADE00C9103D /* XCRemoteSwiftPackageReference "Kingfisher" */,
 				CC3981FF2DA130F400C9103D /* XCRemoteSwiftPackageReference "Then" */,
 				CC7E24CE2DAA908E00397F76 /* XCRemoteSwiftPackageReference "RxSwift" */,
+				A2ECAB442DCC89D400D244D9 /* XCRemoteSwiftPackageReference "SnapKit" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = CC2E99792D9287B2000B1476 /* Products */;
@@ -636,6 +622,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		A2ECAB442DCC89D400D244D9 /* XCRemoteSwiftPackageReference "SnapKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SnapKit/SnapKit";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.7.1;
+			};
+		};
 		CC3980ED2D951A4500C9103D /* XCRemoteSwiftPackageReference "Swinject" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/Swinject/Swinject";
@@ -695,6 +689,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		A2ECAB452DCC89D400D244D9 /* SnapKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A2ECAB442DCC89D400D244D9 /* XCRemoteSwiftPackageReference "SnapKit" */;
+			productName = SnapKit;
+		};
 		CC3980EE2D951A4500C9103D /* Swinject */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = CC3980ED2D951A4500C9103D /* XCRemoteSwiftPackageReference "Swinject" */;
