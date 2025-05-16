@@ -36,6 +36,11 @@ final class MypageCoordinator: CoordinatorProtocol {
         navigationController.setViewControllers([mypageVC], animated: false)
     }
     
+    func didLogout() {
+        print("didLogout called")
+        parentCoordinator?.logoutAndStartLoginFlow()
+    }
+
 }
 
 extension MypageCoordinator: MypageCoordinatorProtocol {

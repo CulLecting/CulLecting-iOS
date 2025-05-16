@@ -32,7 +32,7 @@ final class CustomToastView: UIView {
     //MARK: init
     public init(message: String, iconStyle: toastIconStyle) {
         super.init(frame: .zero)
-        setInit(message: message, iconStyle: iconStyle)
+        setinit(message: message, iconStyle: iconStyle)
         setUI()
     }
     
@@ -45,7 +45,7 @@ final class CustomToastView: UIView {
         self.flex.layout()
     }
     
-    private func setInit(message: String, iconStyle: toastIconStyle) {
+    private func setinit(message: String, iconStyle: toastIconStyle) {
         toastLabel.text = message
         
         switch iconStyle {

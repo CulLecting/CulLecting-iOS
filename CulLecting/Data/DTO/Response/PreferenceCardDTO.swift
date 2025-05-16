@@ -17,7 +17,7 @@ struct PreferenceCardDTO: Decodable {
         return PreferenceCardEntity(
             keywords: keywords,
             culturalCount: culturalCount,
-            manyCategory: manyCategory
+            manyCategory: PreferenceCategory(rawValue: manyCategory) ?? .문화예술일반
         )
     }
 }

@@ -9,6 +9,7 @@
 import UIKit
 
 import FlexLayout
+import Photos
 import PinLayout
 import RxCocoa
 import RxSwift
@@ -22,7 +23,11 @@ final class ArchiveViewController: UIViewController {
     private let viewModel: ArchiveViewModel
     private weak var coordinator: ArchiveCoordinator?
     
+    private let ticketTapped = PublishRelay<Ticket>()
     private var imagePickCompletion: ((UIImage) -> Void)?
+    private let fetchTriggerRelay = PublishRelay<Void>()
+    private let imageUploadRelay = PublishRelay<UIImage>()
+    private var currentActionType: TicketActionType = .create
     
     // MARK: UI Components
     private let segmentedControl = UISegmentedControl(items: ["내 기록", "취향 카드"]).then {
@@ -66,6 +71,12 @@ final class ArchiveViewController: UIViewController {
     }
     
     // MARK: View LifeCycle
+    //TODO: 변경사항 반영 메서드 추가
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        fetchTriggerRelay.accept(())
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         setNavigationBar()
@@ -88,85 +99,90 @@ private extension ArchiveViewController {
     }
     
     func setupUI() {
-            view.backgroundColor = .white
-            
-            view.addSubview(containerView)
-            view.addSubview(floatingButton)
-            
-            containerView.addSubview(segmentedControl)
-            containerView.addSubview(contentContainerView)
-            
-            contentContainerView.addSubview(ticketSegmentView)
-            contentContainerView.addSubview(analyzeSegmentView)
-        }
+        view.backgroundColor = .white
         
-        func layout() {
-            containerView.pin
-                .top(view.pin.safeArea.top)
-                .horizontally()
-            
-            containerView.flex
-                .direction(.column)
-                .alignItems(.center)
-                .define {
-                    $0.addItem(segmentedControl)
-                        .marginTop(12)
-                        .width(180)
-                        .height(36)
-                    
-                    $0.addItem(contentContainerView)
-                        .marginTop(20)
-                        .width(100%)
-                        .grow(1)
-                }
-            
-            ticketSegmentView.pin.all()
-            analyzeSegmentView.pin.all()
-            
-            floatingButton.pin
-                .bottom(view.pin.safeArea.bottom).marginBottom(20)
-                .right(view.pin.safeArea.right).marginRight(20)
-                .width(54)
-                .height(54)
-            
-            containerView.flex.layout(mode: .adjustHeight)
-        }
+        view.addSubview(containerView)
+        view.addSubview(floatingButton)
+        
+        containerView.addSubview(segmentedControl)
+        containerView.addSubview(contentContainerView)
+        
+        contentContainerView.addSubview(ticketSegmentView)
+        contentContainerView.addSubview(analyzeSegmentView)
+        
+        ticketSegmentView.isHidden = false
+        analyzeSegmentView.isHidden = true
+    }
+    
+    func layout() {
+        containerView.pin
+            .top(view.pin.safeArea.top)
+            .left()
+            .right()
+            .bottom(view.pin.safeArea.bottom)
+        
+        containerView.flex
+            .direction(.column)
+            .alignItems(.center)
+            .define {
+                $0.addItem(segmentedControl)
+                    .marginTop(12)
+                    .width(180)
+                    .height(36)
+                
+                $0.addItem(contentContainerView)
+                    .marginTop(20)
+                    .width(100%)
+                    .grow(1)
+            }
+        
+        containerView.flex.layout()
+        
+        ticketSegmentView.pin.all()
+        analyzeSegmentView.pin.all()
+        
+        floatingButton.pin
+            .bottom(view.pin.safeArea.bottom).marginBottom(20)
+            .right(view.pin.safeArea.right).marginRight(20)
+            .width(54)
+            .height(54)
+    }
 }
-
 
 // MARK: - Binding
 private extension ArchiveViewController {
     
     func bindViewModel() {
-        print("bindVM 호출")
-        // Input
-        let fetchTrigger = Observable.just(())
+        let fetchTrigger = fetchTriggerRelay
+            .asObservable()
+            .startWith(())
+        
         let segmentChanged = segmentedControl.rx.selectedSegmentIndex.asObservable()
+        
+        ticketSegmentView.onTicketTapped = { [weak self] ticket in
+            self?.ticketTapped.accept(ticket)
+        }
         
         let input = ArchiveViewModel.Input(
             fetchTrigger: fetchTrigger,
-            segmentChanged: segmentChanged
+            segmentChanged: segmentChanged,
+            ticketTapped: ticketTapped.asObservable(),
+            imageUploadTrigger: imageUploadRelay.asObservable()
         )
         
-        // Output
         let output = viewModel.transform(input: input)
         
         output.archivingList
-            .do(onNext: { ticket in
-                print("archivingList 수신: \(ticket.count)개")
-            })
             .drive(onNext: { [weak self] tickets in
                 self?.ticketSegmentView.configure(with: tickets)
             })
             .disposed(by: disposeBag)
         
         output.preferenceCard
-            .do(onNext: { card in
-                print("preferenceCard 수신: \(String(describing: card))개")
-            })
-            .drive(onNext: { [weak self] card in
-                guard let card else { return }
-                self?.analyzeSegmentView.configure(with: card)
+            .withLatestFrom(output.ticketCount) { (card: $0, count: $1) }
+            .drive(onNext: { [weak self] pair in
+                guard let self, let card = pair.card else { return }
+                self.analyzeSegmentView.configure(with: card, ticketCount: pair.count)
             })
             .disposed(by: disposeBag)
         
@@ -182,17 +198,67 @@ private extension ArchiveViewController {
             })
             .disposed(by: disposeBag)
         
+        output.selectedTicket
+            .emit(onNext: { [weak self] ticket in
+                self?.coordinator?.showTicketDetail(from: ticket)
+            })
+            .disposed(by: disposeBag)
+        
         floatingButton.rx.tap
             .bind { [weak self] in
-                guard let self else { return }
-                self.coordinator?.presentAddMenu(from: self, actionType: .create)
+                guard let self = self else { return }
+                if TokenStorage.shared.accessToken == nil {
+                    self.showAlert(
+                        title: "알림",
+                        message: "가입하고 내 문화생활을 컬렉팅 해보세요!"
+                    )
+                } else {
+                    self.coordinator?.presentAddMenu(from: self, actionType: .create)
+                }
             }
+            .disposed(by: disposeBag)
+        
+        
+        output.imageUploadCompleted
+            .emit(onNext: { [weak self] ticket in
+                self?.showAlert(
+                    title: "티켓 등록 성공!",
+                    message: "티켓 상세페이지에서 내용을 수정해보세요."
+                )
+            })
             .disposed(by: disposeBag)
     }
 }
 
-//MARK: 기타 메서드
-private extension ArchiveViewController {
+
+// MARK: - Image Picker
+extension ArchiveViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+
+    func openImagePicker(actionType: TicketActionType, completion: @escaping (UIImage) -> Void) {
+        imagePickCompletion = completion
+        currentActionType = actionType
+        checkPhotoLibraryPermission()
+    }
+    
+    private func checkPhotoLibraryPermission() {
+        let status = PHPhotoLibrary.authorizationStatus()
+        switch status {
+        case .authorized, .limited:
+            showPhotoPicker()
+        case .notDetermined:
+            PHPhotoLibrary.requestAuthorization { newStatus in
+                DispatchQueue.main.async {
+                    if newStatus == .authorized || newStatus == .limited {
+                        self.showPhotoPicker()
+                    } else {
+                        self.presentPermissionDeniedAlert()
+                    }
+                }
+            }
+        default:
+            presentPermissionDeniedAlert()
+        }
+    }
     
     func showPhotoPicker() {
         let picker = UIImagePickerController()
@@ -200,25 +266,34 @@ private extension ArchiveViewController {
         picker.sourceType = .photoLibrary
         present(picker, animated: true)
     }
-}
-
-
-//MARK: -ImagePicker
-extension ArchiveViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     
-    func openImagePicker(completion: @escaping (UIImage) -> Void) {
-        let picker = UIImagePickerController()
-        picker.delegate = self
-        picker.sourceType = .photoLibrary
-        picker.completionHandler = completion
-        present(picker, animated: true)
+    private func presentPermissionDeniedAlert() {
+        // showAlertWithCancel이 이미 정의되어 있으니 재사용
+        showAlertWithCancel(
+            title: "사진 권한 필요",
+            message: "앨범에 접근하려면 사진 권한을 허용해주세요.",
+            okTitle: "설정으로 이동",
+            cancelTitle: "취소",
+            okHandler: {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            }
+        )
     }
     
     func imagePickerController(_ picker: UIImagePickerController,
                                didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
         picker.dismiss(animated: true)
+        
         if let image = info[.originalImage] as? UIImage {
-            imagePickCompletion?(image)
+            switch currentActionType {
+            case .create:
+                coordinator?.uploadTicket(image: image)
+                
+            case .edit(let ticket):
+                coordinator?.updateTicketImage(ticketId: ticket.id, newImage: image)
+            }
         }
     }
     

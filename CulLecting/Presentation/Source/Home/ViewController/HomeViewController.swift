@@ -51,7 +51,7 @@ final class HomeViewController: UIViewController {
         $0.layer.cornerRadius = 27
     }
     
-    // MARK: Init
+    // MARK: init
     init(viewModel: HomeViewModel, coordinator: HomeCoordinator) {
         self.viewModel = viewModel
         self.coordinator = coordinator
@@ -104,11 +104,11 @@ private extension HomeViewController {
             .right(20)
             .width(114)
             .height(56)
-
+        
         [myTicketView, emptyTicketView, datePickerHeaderView,
          culturalContentHorizontalView, recommendSectionView, recentSectionView]
             .forEach { $0.setNeedsLayout(); $0.layoutIfNeeded() }
-
+        
         contentView.flex
             .direction(.column)
             .paddingTop(20)
@@ -116,40 +116,40 @@ private extension HomeViewController {
                 flex.addItem(ticketLabel)
                     .alignSelf(.start)
                     .marginLeft(20)
-
-                if myTicketView.isHidden {
-                    flex.addItem(emptyTicketView)
-                        .marginTop(16)
-                        .marginHorizontal(20)
-                        .height(142)
-                } else {
-                    flex.addItem(myTicketView)
-                        .marginTop(16)
-                        .marginLeft(20)
-                        .height(myTicketView.frame.height)
-                }
-
+                
+                flex.addItem(emptyTicketView)
+                    .isIncludedInLayout(myTicketView.isHidden)
+                    .marginTop(16)
+                    .marginHorizontal(20)
+                    .height(142)
+                
+                flex.addItem(myTicketView)
+                    .isIncludedInLayout(!myTicketView.isHidden)
+                    .marginTop(16)
+                    .marginLeft(20)
+                    .width(100%)
+                    .height(250)
+                
                 flex.addItem(datePickerHeaderView)
-                    .marginTop(24)
+                    .marginTop(40)
                     .marginHorizontal(20)
                     .height(datePickerHeaderView.frame.height)
-
+                
                 flex.addItem(culturalContentHorizontalView)
                     .marginTop(0)
                     .marginLeft(10)
                     .height(culturalContentHorizontalView.frame.height)
-
+                
                 flex.addItem(recommendSectionView)
-                    .marginTop(30)
+                    .marginTop(40)
                     .marginLeft(10)
                     .height(recommendSectionView.frame.height)
-
+                
                 flex.addItem(recentSectionView)
-                    .marginTop(30)
+                    .marginTop(40)
                     .marginLeft(10)
                     .height(recentSectionView.frame.height)
             }
-
         contentView.flex.layout(mode: .adjustHeight)
         scrollView.contentSize = contentView.frame.size
     }
@@ -215,3 +215,4 @@ private extension HomeViewController {
 
     }
 }
+

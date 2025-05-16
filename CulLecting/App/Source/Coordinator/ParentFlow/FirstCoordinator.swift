@@ -6,6 +6,8 @@
 //
 
 import UIKit
+
+import RxSwift
 import Swinject
 
 public protocol FirstCoordinatorProtocol: CoordinatorProtocol {
@@ -14,6 +16,7 @@ public protocol FirstCoordinatorProtocol: CoordinatorProtocol {
     func showTabbarFlow()
     func setTabbarCoordinator()
     func getChildCoordinator(_ coordinatorType: CoordinatorType) -> CoordinatorProtocol?
+    func replaceRootViewController(with viewController: UIViewController)
     func didLoggedIn()
     func didLoggedOut()
 }
@@ -31,6 +34,7 @@ class FirstCoordinator: FirstCoordinatorProtocol {
     public var navigationController: UINavigationController
     public var type: CoordinatorType = .app
     public weak var finishDelegate: CoordinatorFinishDelegate?
+    private let disposeBag = DisposeBag()
     
     //MARK: 토큰 & 온보딩 처리
     private var haveToken: Bool {
@@ -47,9 +51,29 @@ class FirstCoordinator: FirstCoordinatorProtocol {
         self.navigationController = dependency.navigationController
     }
     
-    public func start() {
+    func start() {
         navigationController.isNavigationBarHidden = true
-        haveToken ? ( hasSeenOnboarding ? showTabbarFlow() : showOnboardingFlow() ) : showLoginFlow()
+        
+        validateAccessToken { [weak self] isValid in
+            guard let self else { return }
+            
+            if isValid {
+                hasSeenOnboarding ? showTabbarFlow() : showOnboardingFlow()
+            } else {
+                TokenStorage.shared.clearAll()
+                print("토큰 삭제됨")
+                showLoginFlow()
+            }
+        }
+    }
+    
+    /// VC 전환 메서드
+    func replaceRootViewController(with viewController: UIViewController) {
+        guard let window = (UIApplication.shared.connectedScenes.first as? UIWindowScene)?.windows.first else {
+            return
+        }
+        window.rootViewController = viewController
+        window.makeKeyAndVisible()
     }
     
     func showLoginFlow() {
@@ -63,6 +87,8 @@ class FirstCoordinator: FirstCoordinatorProtocol {
     
     func showOnboardingFlow() {
         print("showOnboardingFlow 실행됨")
+        navigationController.isNavigationBarHidden = false
+        
         guard let onboardingCoordinator = dependency.injector.resolve(OnboardingCoordinator.self, argument: navigationController) else { return }
         onboardingCoordinator.parentCoordinator = self
         onboardingCoordinator.finishDelegate = self
@@ -73,12 +99,16 @@ class FirstCoordinator: FirstCoordinatorProtocol {
     /// 탭바 컨트롤러 플로우
     func showTabbarFlow() {
         print("ShowTabbarFlow 실행됨")
+        navigationController.setViewControllers([], animated: false)
+        
         if getChildCoordinator(.tabbar) == nil {
             setTabbarCoordinator()
         }
         guard let tabbarCoordinator = getChildCoordinator(.tabbar) as? TabbarCoordinator else { return }
         tabbarCoordinator.parentCoordinator = self
         tabbarCoordinator.start()
+        
+        replaceRootViewController(with: tabbarCoordinator.navigationController)
     }
     
     /// 탭바 컨트롤러 세팅, 자식 코디네이터로 등록
@@ -100,6 +130,14 @@ class FirstCoordinator: FirstCoordinatorProtocol {
         }
     }
     
+    /// 토큰 유효성 검증 메서드
+    private func validateAccessToken(completion: @escaping (Bool) -> Void) {
+        let repo = AuthRepository()
+        repo.fetchUserInfo()
+            .subscribe(onSuccess: { _ in completion(true) },
+                       onFailure: { _ in completion(false) })
+            .disposed(by: disposeBag)
+    }
 }
 
 /// 자식 코디네이터가 종료되었을 때 실행할 메서드
@@ -115,6 +153,7 @@ extension FirstCoordinator: CoordinatorFinishDelegate {
 /// 이벤트 처리
 extension FirstCoordinator {
     public func didLoggedIn() {
+        print("didloggedin called")
         hasSeenOnboarding ? showTabbarFlow() : showOnboardingFlow()
     }
     

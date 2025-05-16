@@ -46,10 +46,20 @@ final class ArchiveCoordinator: CoordinatorProtocol {
 extension ArchiveCoordinator {
     
     func presentAddMenu(from viewController: UIViewController, actionType: TicketActionType) {
-        viewController.presentAddMenu(
-            onSearch: { [weak self] in self?.showSearchTicketInfo(actionType: actionType) },
-            onPick: { [weak self] in self?.pickPhotoFromLibrary(actionType: actionType) }
-        )
+        switch actionType {
+        case .create:
+            viewController.presentAddMenu(
+                onSearch: { [weak self] in self?.showSearchTicketInfo(actionType: actionType) },
+                onPick: { [weak self] in self?.pickPhotoFromLibrary(actionType: actionType) }
+            )
+            
+        case .edit(let ticket):
+            viewController.presentAddMenu(
+                onSearch: { [weak self] in self?.showSearchTicketInfo(actionType: actionType) },
+                onPick: { [weak self] in self?.pickPhotoFromLibrary(actionType: actionType) },
+                onDelete: { [weak self] in self?.deleteTicket(ticket: ticket) }
+            )
+        }
     }
     
     func uploadTicket(image: UIImage) {
@@ -76,7 +86,7 @@ extension ArchiveCoordinator {
     
     func pickPhotoFromLibrary(actionType: TicketActionType) {
         guard let archiveVC = navigationController.viewControllers.first as? ArchiveViewController else { return }
-        archiveVC.openImagePicker { [weak self] selectedImage in
+        archiveVC.openImagePicker(actionType: actionType) { [weak self] selectedImage in
             switch actionType {
             case .create:
                 self?.showPhotoPreview(image: selectedImage)
@@ -107,6 +117,27 @@ extension ArchiveCoordinator {
             .disposed(by: disposeBag)
     }
     
+    func deleteTicket(ticket: Ticket) {
+        let useCase = injector.resolve(ArchivingUseCase.self)!
+        
+        useCase.deleteArchiving(id: ticket.id)
+            .observe(on: MainScheduler.instance)
+            .subscribe(onCompleted: { [weak self] in
+                guard let self,
+                      let topVC = self.navigationController.topViewController else { return }
+                
+                topVC.showAlert(
+                    title: "삭제 완료",
+                    message: "티켓이 성공적으로 삭제되었습니다."
+                ) {
+                    self.navigationController.popViewController(animated: true)
+                }
+            }, onError: { error in
+                print("❌ 티켓 삭제 실패: \(error.localizedDescription)")
+            })
+            .disposed(by: disposeBag)
+    }
+    
     func showTicketDetail(from ticket: Ticket) {
         let detailVM = injector.resolve(TicketDetailViewModel.self)!
         let detailVC = TicketDetailViewController(viewModel: detailVM, ticket: ticket, coordinator: self)
@@ -116,15 +147,17 @@ extension ArchiveCoordinator {
     func editTicketDetail(ticket: Ticket, onUpdated: @escaping (Ticket) -> Void) {
         let viewModel = TicketEditViewModel(
             useCase: injector.resolve(ArchivingUseCase.self)!,
-            ticketId: ticket.id
+            ticket: ticket
         )
+        
         let editVC = TicketEditViewController(ticket: ticket, viewModel: viewModel)
+        let nav = UINavigationController(rootViewController: editVC)
         
         editVC.onSaveCompleted = { updatedTicket in
             onUpdated(updatedTicket)
+            nav.dismiss(animated: true)
         }
         
-        let nav = UINavigationController(rootViewController: editVC)
         nav.modalPresentationStyle = .automatic
         navigationController.present(nav, animated: true)
     }

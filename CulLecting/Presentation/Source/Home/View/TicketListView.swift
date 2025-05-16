@@ -8,19 +8,28 @@
 
 import UIKit
 
+import Then
+import PinLayout
 
-final class TicketListView: UIView {
+
+final class TicketListView: UIView, UICollectionViewDelegate {
     
-    private let stackView = UIStackView().then {
-        $0.axis = .horizontal
-        $0.spacing = 12
-        $0.alignment = .fill
-        $0.distribution = .equalSpacing
+    // MARK: Properties
+    private var tickets: [Ticket] = []
+
+    // MARK: UI
+    private lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout()).then {
+        $0.backgroundColor = .clear
+        $0.showsHorizontalScrollIndicator = false
+        $0.dataSource = self
+        $0.delegate = self
+        $0.register(TicketCell.self, forCellWithReuseIdentifier: TicketCell.identifier)
     }
 
+    // MARK: init
     override init(frame: CGRect) {
         super.init(frame: frame)
-        addSubview(stackView)
+        addSubview(collectionView)
     }
 
     required init?(coder: NSCoder) {
@@ -29,21 +38,61 @@ final class TicketListView: UIView {
 
     override func layoutSubviews() {
         super.layoutSubviews()
-        stackView.frame = bounds
-        
-        if let firstSubview = stackView.arrangedSubviews.first {
-            self.pin.height(of: firstSubview).marginTop(0).marginBottom(0)
-        }
+        collectionView.frame = bounds
     }
 
+    // MARK: Configure
     func configure(with tickets: [Ticket]) {
-        stackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        self.tickets = tickets
+        collectionView.reloadData()
+    }
 
-        tickets.forEach { ticket in
-            let ticketView = TicketTemplateView(ticket: ticket)
-            ticketView.layer.cornerRadius = 16
-            ticketView.clipsToBounds = true
-            stackView.addArrangedSubview(ticketView)
+    // MARK: Layout
+    private func layout() -> UICollectionViewFlowLayout {
+        let layout = UICollectionViewFlowLayout()
+        layout.scrollDirection = .horizontal
+        layout.minimumLineSpacing = 12
+        layout.itemSize = CGSize(width: 140, height: 220)
+        return layout
+    }
+}
+
+// MARK: UICollectionViewDataSource
+extension TicketListView: UICollectionViewDataSource {
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return tickets.count
+    }
+
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: TicketCell.identifier, for: indexPath) as? TicketCell else {
+            return UICollectionViewCell()
         }
+        cell.configure(with: tickets[indexPath.item])
+        return cell
+    }
+}
+
+// MARK: Cell
+final class TicketCell: UICollectionViewCell {
+    static let identifier = "TicketCell"
+
+    private let templateView = TicketFrontView()
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        contentView.addSubview(templateView)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        templateView.frame = contentView.bounds
+    }
+
+    func configure(with ticket: Ticket) {
+        templateView.configureCompact(with: ticket)
     }
 }

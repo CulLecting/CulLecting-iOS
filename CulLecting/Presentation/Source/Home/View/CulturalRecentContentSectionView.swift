@@ -42,7 +42,7 @@ final class CulturalRecentContentSectionView: UIView {
         $0.register(CulturalRecentCell.self, forCellWithReuseIdentifier: CulturalRecentCell.identifier)
     }
 
-    // MARK: Init
+    // MARK: init
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupUI()

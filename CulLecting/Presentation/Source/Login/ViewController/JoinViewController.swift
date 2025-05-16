@@ -28,8 +28,16 @@ class JoinViewController: UIViewController {
     private let emailAuthButton = UIButton.makeButton(style: .darkButtonActive, title: "인증 요청", cornerRadius: 10)
     private let verificationTextField = UITextField.makeTextField(style: .defaultStyle, placeholderText: "인증번호 입력")
     private let verificationDoneButton = UIButton.makeButton(style: .darkButtonDisabled, title: "인증", cornerRadius: 10)
-    private let passwordTextField = UITextField.makeTextField(style: .defaultStyle, placeholderText: "비밀번호 입력")
-    private let confirmPasswordTextField = UITextField.makeTextField(style: .defaultStyle, placeholderText: "비밀번호 확인")
+    private let passwordTextField = UITextField.makeTextField(style: .defaultStyle, placeholderText: "비밀번호 입력").then {
+        $0.textContentType = .password
+        $0.isSecureTextEntry = true
+        $0.enablePasswordToggle()
+    }
+    private let confirmPasswordTextField = UITextField.makeTextField(style: .defaultStyle, placeholderText: "비밀번호 확인").then {
+        $0.textContentType = .password
+        $0.isSecureTextEntry = true
+        $0.enablePasswordToggle()
+    }
     private let nicknameTextField = UITextField.makeTextField(style: .defaultStyle, placeholderText: "닉네임 입력")
     
     private let passwordWarningLabel = UILabel().then {
@@ -46,7 +54,7 @@ class JoinViewController: UIViewController {
     }
     
     private let termsLabel = UILabel().then {
-        $0.text = "가입 약관에 모두 동의합니다."
+        $0.text = "서비스 이용약관에 모두 동의합니다."
         $0.font = .fontPretendard(style: .body14R)
         $0.textColor = .grey80
     }
@@ -100,12 +108,6 @@ class JoinViewController: UIViewController {
         
         let output = viewModel.transform(input: input)
         
-        output.isSendCodeEnabled
-            .drive(onNext: { [weak self] isEnabled in
-                self?.emailAuthButton.isEnabled = isEnabled
-            })
-            .disposed(by: disposeBag)
-        
         output.isVerifyEnabled
             .drive(verificationDoneButton.rx.isEnabled)
             .disposed(by: disposeBag)
@@ -127,8 +129,12 @@ class JoinViewController: UIViewController {
             .emit(onNext: { [weak self] success in
                 self?.showAlert(
                     title: success ? "성공" : "실패",
-                    message: success ? "인증번호가 발송되었습니다." : "이메일 형식을 확인해주세요."
+                    message: success ? "인증번호가 발송되었습니다." : "인증 메일 발송에 실패했습니다.\ncamelcasemail@gmail.com으로 문의를 남겨주세요."
                 )
+                if success {
+                    self?.verificationDoneButton.isEnabled = true
+                    self?.verificationDoneButton.applyBarButtonStyle(.darkButtonActive)
+                }
             })
             .disposed(by: disposeBag)
         
@@ -141,9 +147,13 @@ class JoinViewController: UIViewController {
                     self.verificationDoneButton.applyBarButtonStyle(.darkButtonDisabled)
                     self.verificationDoneButton.setTitle("인증 완료", for: .normal)
                     self.verificationDoneButton.isEnabled = false
+                    self.verificationTextField.isEnabled = false
+                    self.verificationTextField.textColor = .grey30
+                    self.verificationTextField.backgroundColor = .grey50
                 }
             })
             .disposed(by: disposeBag)
+
         
         
         // 회원가입 요청 처리
@@ -160,12 +170,37 @@ class JoinViewController: UIViewController {
                 }
             })
             .disposed(by: disposeBag)
+        
+        emailAuthButton.rx.tap
+            .withLatestFrom(emailTextField.rx.text.orEmpty)
+            .subscribe(onNext: { [weak self] email in
+                guard let self = self else { return }
+                
+                let isValid = NSPredicate(
+                    format: "SELF MATCHES %@",
+                    "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}"
+                ).evaluate(with: email)
+                
+                if isValid {
+                    self.showAlert(title: "인증 요청", message: "인증번호가 발송되었습니다.")
+                    self.viewModel.sendCodeTapRelay.accept(())
+                } else {
+                    self.showAlert(title: "오류", message: "유효한 이메일 주소를 입력해주세요.")
+                }
+            })
+            .disposed(by: disposeBag)
+        
+        viewModel.showVerificationFailedAlert = { [weak self] in
+            self?.showAlert(title: "오류", message: "인증번호를 확인해주세요.")
+        }
     }
 
     
     // MARK: Methods
     private func setupNavigationBar() {
+        self.navigationController?.setNavigationBarHidden(false, animated: false)
         navigationItem.title = "가입하기"
+        
         let backItem = UIBarButtonItem(
             image: UIImage.arrowLeft,
             style: .plain,
@@ -189,6 +224,12 @@ class JoinViewController: UIViewController {
             self.termsToggleButton.setImage(newImage, for: .normal)
         }
         termsToggleButton.addAction(toggleAction, for: .touchUpInside)
+        
+        termsConfirmButton.addAction(UIAction(handler: { _ in
+            if let url = URL(string: "https://sore-harp-335.notion.site/Cullecting-1ea2df26223f8034b53ce444fc39ae89?pvs=4") {
+                UIApplication.shared.open(url, options: [:], completionHandler: nil)
+            }
+        }), for: .touchUpInside)
     }
     
     // MARK: UI

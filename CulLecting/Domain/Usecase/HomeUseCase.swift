@@ -12,7 +12,7 @@ import RxSwift
 
 
 protocol HomeUseCaseProtocol {
-    func fetchMyArchivingTickets() -> Single<[Ticket]>
+    func fetchArchiving() -> Single<[Ticket]>
     func searchCulturalImages(keyword: String) -> Single<[CulturalImageEntity]>
     func fetchRecommendCultural() -> Single<[CulturalContentEntity]>
     func fetchLatestCultural() -> Single<[String: [CulturalContentEntity]]>
@@ -31,15 +31,10 @@ final class HomeUseCase: HomeUseCaseProtocol {
         self.culturalRepository = culturalRepository
     }
     
-    func fetchMyArchivingTickets() -> Single<[Ticket]> {
-        return archiveRepository.fetchArchiving()
-            .catch { error in
-                if case NetworkError.serverMessage(let message) = error,
-                   message.contains("등록된 아카이빙 데이터가 없습니다") {
-                    return .just([])
-                }
-                return .error(error)
-            }
+    func fetchArchiving() -> Single<[Ticket]> {
+        return NetworkManager.shared
+            .request([ArchivingDTO].self, ArchivingAPI.fetchArchiving)
+            .map { $0.map { $0.mapping() } }
     }
     
     func searchCulturalImages(keyword: String) -> Single<[CulturalImageEntity]> {

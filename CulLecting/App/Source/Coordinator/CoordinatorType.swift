@@ -19,14 +19,14 @@ enum TabItem: Int, CaseIterable {
     case home
     case archive
     case search
-    case myPage
+    case mypage
 
     var title: String {
         switch self {
         case .home: return "홈"
         case .archive: return "아카이브"
         case .search: return "검색"
-        case .myPage: return "마이페이지"
+        case .mypage: return "마이페이지"
         }
     }
 
@@ -35,7 +35,7 @@ enum TabItem: Int, CaseIterable {
         case .home: return UIImage.tabbarHome
         case .archive: return UIImage.tabbarArchive
         case .search: return UIImage.tabbarSearch
-        case .myPage: return UIImage.tabbarMyPage
+        case .mypage: return UIImage.tabbarMyPage
         }
     }
 }

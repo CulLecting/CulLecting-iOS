@@ -47,18 +47,24 @@ final class ArchivingUseCase: ArchivingUseCaseProtocol {
     }
 
     func uploadArchiveImg(image: UIImage) -> Single<String> {
-        return repository.uploadArchiveImg(image: image)
+        guard let imageData = image.jpegData(compressionQuality: 0.8) else {
+            return .error(NetworkError.invalidImageData)
+        }
+        
+        return NetworkManager.shared
+            .uploadMultipartWithResponse(
+                to: ArchivingAPI.uploadArchiveImg,
+                image: imageData,
+                parameters: nil,
+                responseType: UploadArchiveImgResponseDTO.self
+            )
+            .map { $0.id }
     }
 
     func fetchArchiving() -> Single<[Ticket]> {
-        return repository.fetchArchiving()
-            .catch { error in
-                if case NetworkError.serverMessage(let message) = error,
-                   message.contains("등록된 아카이빙 데이터가 없습니다") {
-                    return .just([])
-                }
-                return .error(error)
-            }
+        return NetworkManager.shared
+            .request([ArchivingDTO].self, ArchivingAPI.fetchArchiving)
+            .map { $0.map { $0.mapping() } }
     }
 
     func fetchTicket(id: String) -> Single<Ticket> {
