@@ -12,14 +12,29 @@ import RxSwift
 
 
 protocol MypageUseCaseProtocol {
-    
+    func fetchUser() -> Single<UserEntity>
+    func logout() -> Completable
+    func deleteAccount() -> Completable
 }
+
 
 final class MypageUseCase: MypageUseCaseProtocol {
 
-    private let repository: AuthRepository
+    private let authRepository: AuthRepositoryProtocol
 
-    init(repository: AuthRepository) {
-        self.repository = repository
+    init(authRepository: AuthRepositoryProtocol) {
+        self.authRepository = authRepository
+    }
+
+    func fetchUser() -> Single<UserEntity> {
+        return authRepository.fetchUserInfo()
+    }
+
+    func logout() -> Completable {
+        return authRepository.logout()
+    }
+
+    func deleteAccount() -> Completable {
+        return authRepository.deleteAccount()
     }
 }

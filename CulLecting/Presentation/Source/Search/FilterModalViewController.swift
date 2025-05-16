@@ -43,11 +43,12 @@ class FilterModalViewController: UIViewController {
     private let resetButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("초기화", for: .normal)
-        button.setTitleColor(.black, for: .normal)
-        button.layer.borderColor = UIColor.black.cgColor
+        button.setTitleColor(.grey90, for: .normal)
+        button.titleLabel?.font = .fontPretendard(style: .title18SB)
+        button.layer.borderColor = UIColor.grey90.cgColor
         button.layer.borderWidth = 0.5
-        button.backgroundColor = .grey5
-        button.layer.cornerRadius = 25
+        button.backgroundColor = .white
+        button.layer.cornerRadius = 28
         button.layer.masksToBounds = true
         return button
     }()
@@ -55,9 +56,10 @@ class FilterModalViewController: UIViewController {
     private let applyButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("적용하기", for: .normal)
+        button.titleLabel?.font = .fontPretendard(style: .title18SB)
         button.setTitleColor(.white, for: .normal)
         button.backgroundColor = .grey90
-        button.layer.cornerRadius = 25
+        button.layer.cornerRadius = 28
         button.layer.masksToBounds = true
         return button
     }()
@@ -93,25 +95,25 @@ class FilterModalViewController: UIViewController {
         containerView.addSubview(buttonStackView)
         
         categoryView.snp.makeConstraints {
-            $0.top.equalTo(scrollView.snp.top)
+            $0.top.equalTo(scrollView.snp.top).offset(20)
             $0.leading.trailing.equalToSuperview()
             $0.height.equalTo(150)
         }
         
         regionView.snp.makeConstraints {
-            $0.top.equalTo(categoryView.snp.bottom)
+            $0.top.equalTo(categoryView.snp.bottom).offset(20)
             $0.leading.trailing.equalToSuperview()
             $0.height.equalTo(350)
         }
         
         costView.snp.makeConstraints {
-            $0.top.equalTo(regionView.snp.bottom)
+            $0.top.equalTo(regionView.snp.bottom).offset(20)
             $0.leading.trailing.equalToSuperview()
             $0.height.equalTo(100)
         }
         
         ageView.snp.makeConstraints {
-            $0.top.equalTo(costView.snp.bottom)
+            $0.top.equalTo(costView.snp.bottom).offset(20)
             $0.leading.trailing.equalToSuperview()
             $0.height.equalTo(100)
         }
@@ -119,7 +121,7 @@ class FilterModalViewController: UIViewController {
         buttonStackView.snp.makeConstraints {
             $0.top.equalTo(ageView.snp.bottom).offset(30)
             $0.leading.trailing.equalToSuperview().inset(20)
-            $0.height.equalTo(60)
+            $0.height.equalTo(56)
             $0.bottom.equalToSuperview().inset(10)
         }
     }
@@ -127,14 +129,19 @@ class FilterModalViewController: UIViewController {
     
     
     private func configureSheetPresentation() {
-        if let sheet = sheetPresentationController {
+        guard let sheet = sheetPresentationController else { return }
+        
+        if #available(iOS 16.0, *) {
             let twoThirdsHeight = UISheetPresentationController.Detent.custom { context in
-                return context.maximumDetentValue * (2 / 3) // 화면의 3분의 2 높이
+                return context.maximumDetentValue * (2.0 / 3.0)
             }
-            sheet.detents = [twoThirdsHeight] // ✅ 3분의 2 높이로 설정
-            sheet.prefersGrabberVisible = true   // ✅ 상단 핸들 표시
-            sheet.preferredCornerRadius = 16     // ✅ 모서리 둥글게
+            sheet.detents = [twoThirdsHeight]
+        } else {
+            sheet.detents = [.medium()]
         }
+        
+        sheet.prefersGrabberVisible = true
+        sheet.preferredCornerRadius = 16
     }
     
     @objc private func resetFilters() {

@@ -30,16 +30,19 @@ final class ArchivingRepository: ArchiveRepositoryProtocol {
 
     func uploadArchiveImg(image: UIImage) -> Single<String> {
         guard let imageData = image.jpegData(compressionQuality: 0.8) else {
+            print("❌ jpegData 변환 실패")
             return .error(NetworkError.invalidImageData)
         }
-
+        
+        print("✅ jpegData 변환 성공: \(imageData.count) bytes")
+        
         return NetworkManager.shared.uploadMultipartWithResponse(
             to: ArchivingAPI.uploadArchiveImg,
             image: imageData,
             parameters: nil,
             responseType: UploadArchiveImgResponseDTO.self
         )
-        .map { $0.data.id }
+        .map { $0.id }
     }
 
     func fetchArchiving() -> Single<[Ticket]> {
@@ -49,7 +52,8 @@ final class ArchivingRepository: ArchiveRepositoryProtocol {
 
     func fetchTicket(id: String) -> Single<Ticket> {
         return NetworkManager.shared
-            .request(ArchivingAPI.fetchSingleTicket(id: id)) as Single<Ticket>
+            .request(ArchivingDTO.self, ArchivingAPI.fetchSingleTicket(id: id))
+            .map { $0.mapping() }
     }
 
     func updateArchiving(dto: UpdateArchivingRequestDTO) -> Completable {

@@ -15,7 +15,7 @@ class RegionCollectionView: UIView, UICollectionViewDelegate, UICollectionViewDa
     
     private let regionLabel = UILabel().then {
         $0.text = "지역"
-        $0.font = .systemFont(ofSize: 20, weight: .bold)
+        $0.font = .fontPretendard(style: .title18SB)
     }
     
     private lazy var regionCollectionView: UICollectionView = {

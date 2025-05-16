@@ -54,6 +54,7 @@ class OnboardingViewController: UIViewController {
     
     private let stackButtonContainerView = UIView().then {
         $0.backgroundColor = .clear
+        $0.clipsToBounds = true
     }
     
     private let categoryView = OnboardingCategoryView()
@@ -120,13 +121,13 @@ class OnboardingViewController: UIViewController {
                 case .location:
                     UIView.animate(withDuration: 0.3) {
                         self.locationView.frame = containerFrame
-                        self.categoryView.frame = containerFrame.offsetBy(dx: containerFrame.width + 40, dy: 0)
+                        self.categoryView.frame = containerFrame.offsetBy(dx: containerFrame.width + 10, dy: 0)
                     }
                     self.navigationItem.leftBarButtonItem = nil
                     
                 case .category:
                     UIView.animate(withDuration: 0.3) {
-                        self.locationView.frame = containerFrame.offsetBy(dx:(containerFrame.width + 40), dy: 0)
+                        self.locationView.frame = containerFrame.offsetBy(dx: -(containerFrame.width + 10), dy: 0)
                         self.categoryView.frame = containerFrame
                     }
                     self.navigationItem.leftBarButtonItem = self.backButton

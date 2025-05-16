@@ -14,7 +14,7 @@ import RxSwift
 
 final class AuthRepository: AuthRepositoryProtocol {
     
-    // MARK: Init
+    // MARK: init
     init() {}
 
     // MARK: AuthRepositoryProtocol

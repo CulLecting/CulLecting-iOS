@@ -15,7 +15,8 @@ final class NetworkManager {
     static let shared = NetworkManager()
     private init() {}
     
-    // MARK: - request with auto refresh
+    //MARK: - request with auto refresh
+    //TODO: 서버에서 에러코드 분류해서 내려주는거로 변경되면 하드코딩 리팩토링해야함
     func request<T: Decodable>(_ urlRequest: URLRequestConvertible) -> Single<T> {
         return makeRequest(urlRequest)
             .catch { error -> Single<T> in
@@ -29,15 +30,20 @@ final class NetworkManager {
             }
     }
     
+    func request<T: Decodable>(_ type: T.Type, _ urlRequest: URLRequestConvertible) -> Single<T> {
+        return makeRequest(urlRequest)
+    }
+    
     private func makeRequest<T: Decodable>(_ urlRequest: URLRequestConvertible) -> Single<T> {
         return Single.create { single in
             AF.request(urlRequest)
-                .validate()
                 .responseDecodable(of: BaseResponse<T>.self) { response in
                     switch response.result {
                     case .success(let base):
                         if let data = base.data {
                             single(.success(data))
+                        } else if T.self == EmptyDecodable.self {
+                            single(.success(EmptyDecodable() as! T))
                         } else {
                             print("Response Data: \(String(data: response.data ?? Data(), encoding: .utf8) ?? "No data")")
                             single(.failure(NetworkError.noData))
@@ -63,7 +69,6 @@ final class NetworkManager {
     func requestWithoutData(_ urlRequest: URLRequestConvertible) -> Completable {
         return Completable.create { completable in
             AF.request(urlRequest)
-                .validate()
                 .responseDecodable(of: BaseResponse<EmptyDecodable>.self) { response in
                     switch response.result {
                     case .success:
@@ -116,7 +121,6 @@ final class NetworkManager {
                 },
                 with: api
             )
-            .validate()
             .response { response in
                 if let error = response.error {
                     if let data = response.data,
@@ -151,22 +155,23 @@ final class NetworkManager {
                 },
                 with: api
             )
-            .validate()
             .responseDecodable(of: BaseResponse<T>.self) { response in
                 switch response.result {
                 case .success(let base):
                     if let data = base.data {
                         single(.success(data))
                     } else {
+                        print("❗ BaseResponse.data가 nil")
+                        print("Raw Response: \(String(data: response.data ?? Data(), encoding: .utf8) ?? "no data")")
                         single(.failure(NetworkError.noData))
                     }
-                case .failure:
-                    if let data = response.data,
-                       let errorDTO = try? JSONDecoder().decode(ErrorResponseDTO.self, from: data) {
-                        single(.failure(NetworkError.serverMessage(errorDTO.message)))
-                    } else {
-                        single(.failure(NetworkError.unknown))
+                case .failure(let err):
+                    print("❗ 디코딩 실패")
+                    print("Error: \(err)")
+                    if let data = response.data {
+                        print("Raw Response: \(String(data: data, encoding: .utf8) ?? "no data")")
                     }
+                    single(.failure(NetworkError.unknown))
                 }
             }
             return Disposables.create()
@@ -174,4 +179,4 @@ final class NetworkManager {
     }
 }
 
-private struct EmptyDecodable: Decodable {}
+struct EmptyDecodable: Decodable {}

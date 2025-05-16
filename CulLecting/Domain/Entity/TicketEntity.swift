@@ -21,11 +21,26 @@ struct Ticket: Codable {
 }
 
 enum TemplateType: String, Codable {
-    case basic
+    case basic = "DEFAULT"
     case black
     case white
     case grid
     case floral
     case cloud
     case swirl
+}
+
+extension Ticket {
+    func updated(title: String, description: String, date: String, category: String) -> Ticket {
+        return Ticket(
+            id: self.id,
+            title: title,
+            description: description,
+            date: date,
+            imageURL: self.imageURL,
+            category: category,
+            template: self.template,
+            averageColorHex: self.averageColorHex
+        )
+    }
 }

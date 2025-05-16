@@ -30,6 +30,7 @@ class DateModalViewController: UIViewController {
         let picker = UIDatePicker()
         picker.datePickerMode = .date
         picker.preferredDatePickerStyle = .inline // ✅ 캘린더 형식으로 고정
+        picker.tintColor = .primary50
         picker.locale = Locale(identifier: "ko_KR")
         return picker
     }()
@@ -96,15 +97,17 @@ class DateModalViewController: UIViewController {
     }
     
     private func configureSheetPresentation() {
-        if let sheet = sheetPresentationController {
-            let fixedHeight = UISheetPresentationController.Detent.custom { context in
-                return 400 // ✅ 고정 높이 설정
-            }
-            
+        guard let sheet = sheetPresentationController else { return }
+        
+        if #available(iOS 16.0, *) {
+            let fixedHeight = UISheetPresentationController.Detent.custom { _ in return 400 }
             sheet.detents = [fixedHeight]
-            sheet.prefersGrabberVisible = true   // ✅ 상단 핸들 표시
-            sheet.preferredCornerRadius = 16
+        } else {
+            sheet.detents = [.medium()]
         }
+        
+        sheet.prefersGrabberVisible = true
+        sheet.preferredCornerRadius = 16
     }
     
     @objc private func resetDate() {
