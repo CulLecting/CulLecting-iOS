@@ -28,7 +28,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         tap.cancelsTouchesInView = false
         window.addGestureRecognizer(tap)
         
+        //테스트용:
         //TokenStorage.shared.clearAll()
+        //UserDefaults.standard.set(false, forKey: "hasSeenOnboarding")
         
         // Assembler에 전체 AppAssembly에 등록된 전체 DI 구성을 등록
         assembler = Assembler([AppAssembly()])

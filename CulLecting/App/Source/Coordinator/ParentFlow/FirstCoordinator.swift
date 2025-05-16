@@ -87,6 +87,8 @@ class FirstCoordinator: FirstCoordinatorProtocol {
     
     func showOnboardingFlow() {
         print("showOnboardingFlow 실행됨")
+        navigationController.isNavigationBarHidden = false
+        
         guard let onboardingCoordinator = dependency.injector.resolve(OnboardingCoordinator.self, argument: navigationController) else { return }
         onboardingCoordinator.parentCoordinator = self
         onboardingCoordinator.finishDelegate = self

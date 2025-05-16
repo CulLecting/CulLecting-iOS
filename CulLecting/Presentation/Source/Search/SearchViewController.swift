@@ -48,6 +48,7 @@ class SearchViewController: UIViewController, UISearchBarDelegate, UICollectionV
     func setNavigationBar() {
         navigationController?.setNavigationBarHidden(false, animated: true)
         navigationItem.title = "검색"
+        navigationController?.navigationBar.tintColor = .primary50
     }
 
     //MARK: UI Components
@@ -78,7 +79,7 @@ class SearchViewController: UIViewController, UISearchBarDelegate, UICollectionV
         collectionView.delegate = self
         collectionView.dataSource = self
         collectionView.backgroundColor = .clear
-        collectionView.register(KeywordCell.self, forCellWithReuseIdentifier: KeywordCell.identifier)
+        collectionView.register(SearchKeywordCell.self, forCellWithReuseIdentifier: SearchKeywordCell.identifier)
         collectionView.register(SearchResultCell.self, forCellWithReuseIdentifier: SearchResultCell.identifier)
         return collectionView
     }()
@@ -223,7 +224,7 @@ class SearchViewController: UIViewController, UISearchBarDelegate, UICollectionV
             }
             return cell
         } else {
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: KeywordCell.identifier, for: indexPath) as! KeywordCell
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: SearchKeywordCell.identifier, for: indexPath) as! SearchKeywordCell
             cell.configure(with: keywords[indexPath.item])
             return cell
         }
@@ -284,8 +285,8 @@ class SearchViewController: UIViewController, UISearchBarDelegate, UICollectionV
 }
 
 // MARK: - Custom Keyword Cell
-class KeywordCell: UICollectionViewCell {
-    static let identifier = "KeywordCell"
+class SearchKeywordCell: UICollectionViewCell {
+    static let identifier = "SearchKeywordCell"
 
     private let keywordLabel = UILabel().then {
         $0.font = .systemFont(ofSize: 14)

@@ -79,7 +79,7 @@ extension TabbarCoordinator {
         childCoordinators = [
             homeCoordinator,
             archiveCoordinator,
-            //searchCoordinator,
+            searchCoordinator,
             myPageCoordinator
         ]
         
@@ -115,10 +115,10 @@ extension TabbarCoordinator {
             tabBarController.selectedIndex = 0
         case .archive:
             tabBarController.selectedIndex = 1
-//        case .search:
-//            tabBarController.selectedIndex = 2
-        case .mypage:
+        case .search:
             tabBarController.selectedIndex = 2
+        case .mypage:
+            tabBarController.selectedIndex = 3
         default:
             break
         }

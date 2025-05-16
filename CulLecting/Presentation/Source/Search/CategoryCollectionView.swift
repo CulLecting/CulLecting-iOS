@@ -15,7 +15,7 @@ class CategoryCollectionView: UIView, UICollectionViewDelegate, UICollectionView
     
     private let categoryLabel = UILabel().then {
         $0.text = "문화 행사 카테고리"
-        $0.font = .systemFont(ofSize: 20, weight: .bold)
+        $0.font = .fontPretendard(style: .title18SB)
     }
     
     private lazy var categoryCollectionView: UICollectionView = {
@@ -47,7 +47,7 @@ class CategoryCollectionView: UIView, UICollectionViewDelegate, UICollectionView
         self.backgroundColor = .white
         self.addSubview(categoryLabel)
         categoryLabel.snp.makeConstraints {
-            $0.top.equalTo(self.safeAreaLayoutGuide.snp.top).offset(12)
+            $0.top.equalTo(self.safeAreaLayoutGuide.snp.top).offset(20)
             $0.leading.trailing.equalToSuperview().inset(16)
             $0.height.equalTo(20)
         }

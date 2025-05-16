@@ -15,7 +15,7 @@ class CostCollectionView: UIView, UICollectionViewDelegate, UICollectionViewData
     
     private let costLabel = UILabel().then {
         $0.text = "비용"
-        $0.font = .systemFont(ofSize: 20, weight: .bold)
+        $0.font = .fontPretendard(style: .title18SB)
     }
     
     private lazy var costCollectionView: UICollectionView = {
