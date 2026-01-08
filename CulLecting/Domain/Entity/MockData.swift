@@ -12,16 +12,6 @@ extension Ticket {
     static let mockTickets: [Ticket] = [
         Ticket(
             id: "1",
-            title: "국립중앙박물관 특별전",
-            description: "한국 미술의 정수를 담은 특별전시",
-            date: "2025-01-15",
-            imageURL: "https://images.unsplash.com/photo-1569172122301-bc5008bc09c5?w=400&h=600&fit=crop",
-            category: "전시/미술",
-            template: .floral,
-            averageColorHex: "#8B7355"
-        ),
-        Ticket(
-            id: "2",
             title: "서울시립교향악단 정기연주회",
             description: "베토벤 교향곡 9번 '합창'",
             date: "2025-01-20",
@@ -29,6 +19,16 @@ extension Ticket {
             category: "클래식",
             template: .black,
             averageColorHex: "#2C2C2C"
+        ),
+        Ticket(
+            id: "2",
+            title: "국립중앙박물관 특별전",
+            description: "한국 미술의 정수를 담은 특별전시",
+            date: "2025-01-15",
+            imageURL: "https://images.unsplash.com/photo-1569172122301-bc5008bc09c5?w=400&h=600&fit=crop",
+            category: "전시/미술",
+            template: .floral,
+            averageColorHex: "#8B7355"
         ),
         Ticket(
             id: "3",
