@@ -319,7 +319,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = SS444RV4LU;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "/Users/palrang22/Documents/Swift/CulLecting-iOS/CulLecting/App/Resources/Info.plist";
+				INFOPLIST_FILE = "CulLecting/App/Resources/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "컬렉팅";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_NSCameraUsageDescription = "카메라로 사진을 찍어 티켓 이미지를 등록하려면 카메라 권한이 필요합니다.";
@@ -358,7 +358,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = SS444RV4LU;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "/Users/palrang22/Documents/Swift/CulLecting-iOS/CulLecting/App/Resources/Info.plist";
+				INFOPLIST_FILE = "CulLecting/App/Resources/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "컬렉팅";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_NSCameraUsageDescription = "카메라로 사진을 찍어 티켓 이미지를 등록하려면 카메라 권한이 필요합니다.";

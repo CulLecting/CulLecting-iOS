@@ -19,7 +19,7 @@ class TicketBackgroundView: UIView {
 
     let backgroundImageView = UIImageView().then {
         $0.contentMode = .scaleAspectFill
-        $0.backgroundColor = .black
+        $0.backgroundColor = .clear
         $0.clipsToBounds = true
     }
 
@@ -55,20 +55,22 @@ class TicketBackgroundView: UIView {
     }
 
     func setBackground(from ticket: Ticket) {
-        switch ticket.template {
-        case .basic:
-            if let url = URL(string: "https://cullecting.site\(ticket.imageURL)") {
-                backgroundImageView.kf.setImage(with: url, completionHandler: { [weak self] result in
-                    guard let self = self, case .success(let value) = result else { return }
-                    
-                    if ticket.averageColorHex.isEmpty,
-                       let avg = value.image.averageColor() {
-                        self.blurView.backgroundColor = avg.withAlphaComponent(0.6)
-                    }
-                })
-            }
-        default:
-            backgroundImageView.image = UIImage.templateBlack
+        // imageURL이 full URL이면 그대로 사용, 아니면 서버 URL 붙이기
+        let urlString = ticket.imageURL.hasPrefix("http") ? ticket.imageURL : "https://cullecting.site\(ticket.imageURL)"
+
+        if let url = URL(string: urlString) {
+            backgroundImageView.kf.setImage(with: url, completionHandler: { [weak self] result in
+                guard let self = self, case .success(let value) = result else { return }
+
+                // averageColorHex가 비어있으면 이미지에서 평균 색상 계산
+                if ticket.averageColorHex.isEmpty,
+                   let avg = value.image.averageColor() {
+                    self.blurView.backgroundColor = avg.withAlphaComponent(0.6)
+                } else if !ticket.averageColorHex.isEmpty {
+                    // averageColorHex가 있으면 해당 색상 사용
+                    self.blurView.backgroundColor = UIColor(hex: ticket.averageColorHex)?.withAlphaComponent(0.6)
+                }
+            })
         }
     }
 }
@@ -165,8 +167,11 @@ final class TicketFrontView: TicketBackgroundView {
         titleLabel.text = ticket.title
         dateLabel.text = ticket.date
         setBackground(from: ticket)
-        
-        if let url = URL(string: "https://cullecting.site\(ticket.imageURL)") {
+
+        // imageURL이 full URL이면 그대로 사용, 아니면 서버 URL 붙이기
+        let urlString = ticket.imageURL.hasPrefix("http") ? ticket.imageURL : "https://cullecting.site\(ticket.imageURL)"
+
+        if let url = URL(string: urlString) {
             thumbnailImageView.kf.setImage(with: url)
         }
     }

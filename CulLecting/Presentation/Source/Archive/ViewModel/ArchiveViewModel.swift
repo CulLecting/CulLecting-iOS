@@ -56,7 +56,10 @@ final class ArchiveViewModel {
             .flatMapLatest { [weak self] in
                 self?.useCase.fetchArchiving()
                     .asObservable()
-                    .catchAndReturn([]) ?? .just([])
+                    .catch { error -> Observable<[Ticket]> in
+                        print("⚠️ 티켓 로딩 실패: \(error) - 더미 데이터 사용")
+                        return .just(Ticket.mockTickets)
+                    } ?? .just(Ticket.mockTickets)
             }
             .bind(to: archivingRelay)
             .disposed(by: disposeBag)

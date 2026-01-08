@@ -53,10 +53,14 @@ class FirstCoordinator: FirstCoordinatorProtocol {
     
     func start() {
         navigationController.isNavigationBarHidden = true
-        
+
+        // 🔧 개발용: 바로 Tabbar로 진입 (서버 내려갔을 때 테스트용)
+        showTabbarFlow()
+
+        /* 프로덕션 코드:
         validateAccessToken { [weak self] isValid in
             guard let self else { return }
-            
+
             if isValid {
                 hasSeenOnboarding ? showTabbarFlow() : showOnboardingFlow()
             } else {
@@ -65,6 +69,7 @@ class FirstCoordinator: FirstCoordinatorProtocol {
                 showLoginFlow()
             }
         }
+        */
     }
     
     /// VC 전환 메서드
