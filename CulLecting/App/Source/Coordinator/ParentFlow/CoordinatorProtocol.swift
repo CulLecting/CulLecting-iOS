@@ -9,23 +9,11 @@
 import UIKit
 
 
-public protocol CoordinatorProtocol : AnyObject {
-    var childCoordinators : [CoordinatorProtocol] { get set }
+public protocol CoordinatorProtocol: AnyObject {
+    var childCoordinators: [CoordinatorProtocol] { get set }
     var navigationController: UINavigationController { get set }
-    var type: CoordinatorType { get }
-    var finishDelegate: CoordinatorFinishDelegate? { get set }
+    var parentCoordinator: CoordinatorProtocol? { get set }
     
     func start()
     func finish()
-}
-
-extension CoordinatorProtocol {
-    public func finish() {
-        childCoordinators.removeAll()
-        finishDelegate?.coordinatorDidFinish(childCoordinator: self)
-    }
-}
-
-public protocol CoordinatorFinishDelegate: AnyObject {
-    func coordinatorDidFinish(childCoordinator: CoordinatorProtocol)
 }
