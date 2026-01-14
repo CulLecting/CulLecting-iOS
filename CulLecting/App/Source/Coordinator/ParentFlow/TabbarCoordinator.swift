@@ -126,21 +126,7 @@ extension TabbarCoordinator {
     
     func logoutAndStartLoginFlow() {
         print("logoutAndStartLoginFlow called")
-
-        childCoordinators.forEach { $0.finish() }
-        childCoordinators.removeAll()
-
-        let loginNav = UINavigationController()
-        let loginCoordinator = LoginCoordinator(
-            navigationController: loginNav,
-            container: dependency.injector
-        )
-        
-        loginCoordinator.parentCoordinator = self.parentCoordinator
-        childCoordinators.append(loginCoordinator)
-        loginCoordinator.start()
-
-        self.parentCoordinator?.replaceRootViewController(with: loginNav)
+        parentCoordinator?.didLoggedOut()
     }
 
 }

@@ -12,18 +12,27 @@ import RxCocoa
 import RxSwift
 
 
+// MARK: - Navigation Events
+enum ArchiveNavigationEvent {
+    case showTicketDetail(Ticket)
+    case showDeleteSuccess
+    case showError(String)
+}
+
 final class ArchiveViewModel {
     var currentTickets: [Ticket] {
         return archivingRelay.value
     }
-    
+
     struct Input {
         let fetchTrigger: Observable<Void>
         let segmentChanged: Observable<Int>
         let ticketTapped: Observable<Ticket>
         let imageUploadTrigger: Observable<UIImage>
+        let updateTicketImageTrigger: Observable<(ticketId: String, image: UIImage)>
+        let deleteTicketTrigger: Observable<Ticket>
     }
-    
+
     struct Output {
         let archivingList: Driver<[Ticket]>
         let preferenceCard: Driver<PreferenceCardEntity?>
@@ -31,39 +40,44 @@ final class ArchiveViewModel {
         let ticketCount: Driver<Int>
         let selectedTicket: Signal<Ticket>
         let imageUploadCompleted: Signal<Ticket>
+        let navigationEvent: Signal<ArchiveNavigationEvent>
+        let isLoggedIn: Driver<Bool>
     }
-    
+
     private let useCase: ArchivingUseCase
+    private let authUseCase: AuthUseCaseProtocol
     private let disposeBag = DisposeBag()
-    
+
     private let archivingRelay = BehaviorRelay<[Ticket]>(value: [])
     private let preferenceCardRelay = BehaviorRelay<PreferenceCardEntity?>(value: nil)
     private let isArchivingRelay = BehaviorRelay<Bool>(value: true)
-    
-    init(useCase: ArchivingUseCase) {
+    private let navigationEventRelay = PublishRelay<ArchiveNavigationEvent>()
+
+    init(useCase: ArchivingUseCase, authUseCase: AuthUseCaseProtocol) {
         self.useCase = useCase
+        self.authUseCase = authUseCase
     }
-    
+
     func transform(input: Input) -> Output {
         let ticketCount = archivingRelay
             .map { $0.count }
             .asDriver(onErrorJustReturn: 0)
-        
+
         let selectedTicket = input.ticketTapped
             .asSignal(onErrorSignalWith: .empty())
-        
+
         input.fetchTrigger
             .flatMapLatest { [weak self] in
                 self?.useCase.fetchArchiving()
                     .asObservable()
                     .catch { error -> Observable<[Ticket]> in
-                        print("⚠️ 티켓 로딩 실패: \(error) - 더미 데이터 사용")
+                        print("티켓 로딩 실패: \(error) - 더미 데이터 사용")
                         return .just(Ticket.mockTickets)
                     } ?? .just(Ticket.mockTickets)
             }
             .bind(to: archivingRelay)
             .disposed(by: disposeBag)
-        
+
         input.fetchTrigger
             .flatMapLatest { [weak self] in
                 self?.useCase.getPreferenceCard()
@@ -73,12 +87,12 @@ final class ArchiveViewModel {
             }
             .bind(to: preferenceCardRelay)
             .disposed(by: disposeBag)
-        
+
         input.segmentChanged
             .map { $0 == 0 }
             .bind(to: isArchivingRelay)
             .disposed(by: disposeBag)
-        
+
         let imageUploadCompleted = input.imageUploadTrigger
             .flatMapLatest { image in
                 self.useCase.uploadArchiveImg(image: image)
@@ -86,23 +100,67 @@ final class ArchiveViewModel {
                     .asObservable()
                     .catch { error in
                         if let netError = error as? NetworkError {
-                            print("🔥 NetworkError 발생: \(netError)")
+                            print("NetworkError 발생: \(netError)")
                         } else {
-                            print("❗ 알 수 없는 에러 발생: \(error.localizedDescription)")
+                            print("알 수 없는 에러 발생: \(error.localizedDescription)")
                         }
                         return .empty()
                     }
             }
             .asSignal(onErrorSignalWith: .empty())
 
-        
+        // Handle update ticket image
+        input.updateTicketImageTrigger
+            .flatMapLatest { [weak self] (ticketId, newImage) -> Observable<Ticket> in
+                guard let self = self else { return .empty() }
+                return self.useCase.updateImage(id: ticketId, image: newImage)
+                    .andThen(self.useCase.fetchTicket(id: ticketId))
+                    .asObservable()
+                    .catch { error in
+                        self.navigationEventRelay.accept(.showError("티켓 업데이트 실패: \(error.localizedDescription)"))
+                        return .empty()
+                    }
+            }
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] updatedTicket in
+                self?.navigationEventRelay.accept(.showTicketDetail(updatedTicket))
+            })
+            .disposed(by: disposeBag)
+
+        // Handle delete ticket
+        input.deleteTicketTrigger
+            .flatMapLatest { [weak self] ticket -> Observable<Void> in
+                guard let self = self else { return .empty() }
+                return self.useCase.deleteArchiving(id: ticket.id)
+                    .asObservable()
+                    .catch { error in
+                        self.navigationEventRelay.accept(.showError("티켓 삭제 실패: \(error.localizedDescription)"))
+                        return .empty()
+                    }
+            }
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] _ in
+                self?.navigationEventRelay.accept(.showDeleteSuccess)
+            })
+            .disposed(by: disposeBag)
+
+
+        // Check login state on each fetch
+        let isLoggedIn = input.fetchTrigger
+            .map { [weak self] _ in
+                self?.authUseCase.isLoggedIn ?? false
+            }
+            .asDriver(onErrorJustReturn: false)
+
         return Output(
             archivingList: archivingRelay.asDriver(),
             preferenceCard: preferenceCardRelay.asDriver(),
             isShowingArchiving: isArchivingRelay.asDriver(),
             ticketCount: ticketCount,
             selectedTicket: selectedTicket,
-            imageUploadCompleted: imageUploadCompleted
+            imageUploadCompleted: imageUploadCompleted,
+            navigationEvent: navigationEventRelay.asSignal(),
+            isLoggedIn: isLoggedIn
         )
     }
 }

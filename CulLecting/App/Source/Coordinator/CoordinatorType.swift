@@ -9,11 +9,11 @@
 import UIKit
 
 
-public enum CoordinatorType {
-    case app, login, onboarding, tabbar //ParentFlow
-    case home, archive, search, mypage //TabbarFlow
-}
-
+//public enum CoordinatorType {
+//    case app, login, onboarding, tabbar //ParentFlow
+//    case home, archive, search, mypage //TabbarFlow
+//}
+//
 
 enum TabItem: Int, CaseIterable {
     case home

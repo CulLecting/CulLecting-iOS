@@ -22,6 +22,11 @@ struct LoginAssembly: Assembly {
             let repository = r.resolve(AuthRepository.self)!
             return AuthUseCase(repository: repository)
         }.inObjectScope(.container)
+
+        // Register protocol for dependency injection
+        container.register(AuthUseCaseProtocol.self) { r in
+            r.resolve(AuthUseCase.self)!
+        }.inObjectScope(.container)
         
         container.register(LoginViewModel.self) { r in
             let useCase = r.resolve(AuthUseCase.self)!

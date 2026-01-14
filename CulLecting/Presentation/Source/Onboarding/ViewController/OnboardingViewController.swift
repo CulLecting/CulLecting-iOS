@@ -16,10 +16,10 @@ import Then
 
 
 class OnboardingViewController: UIViewController {
-    
-    var viewModel: OnboardingViewModel
+
+    private let viewModel: OnboardingViewModel
+    private weak var coordinator: OnboardingCoordinatorProtocol?
     private let disposeBag = DisposeBag()
-    var onFinishTransition: (() -> Void)?
     
     //MARK: UI Components
     private let blackLogo = UIImageView().then {
@@ -73,8 +73,9 @@ class OnboardingViewController: UIViewController {
         bind()
     }
     
-    init(viewModel: OnboardingViewModel) {
+    init(viewModel: OnboardingViewModel, coordinator: OnboardingCoordinatorProtocol) {
         self.viewModel = viewModel
+        self.coordinator = coordinator
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -103,11 +104,13 @@ class OnboardingViewController: UIViewController {
     
     // MARK: ViewModel Binding
     private func bindViewModel() {
-        let input = OnboardingViewModel.Input(nextTrigger: nextTrigger.asObservable(),
-                                              backTrigger: backTrigger.asObservable(),
-                                              skipTrigger: skipTrigger.asObservable(),
-                                              tapCategory: categoryButtonTapRelay.asObservable(),
-                                              tapLocation: locationButtonTapRelay.asObservable()
+        let input = OnboardingViewModel.Input(
+            nextTrigger: nextTrigger.asObservable(),
+            backTrigger: backTrigger.asObservable(),
+            skipTrigger: skipTrigger.asObservable(),
+            tapCategory: categoryButtonTapRelay.asObservable(),
+            tapLocation: locationButtonTapRelay.asObservable(),
+            startTrigger: .empty()  // OnboardingVC doesn't have start button
         )
         let output = viewModel.transform(input: input)
         
@@ -177,13 +180,16 @@ class OnboardingViewController: UIViewController {
             })
             .disposed(by: disposeBag)
         
-        output.finish
+        // Handle navigation events
+        output.navigationEvent
             .observe(on: MainScheduler.instance)
-            .subscribe(onNext: { [weak self] finished in
-                if finished {
+            .subscribe(onNext: { [weak self] event in
+                switch event {
+                case .showFinishScreen:
                     print("온보딩 완료 - OnboardingFinishedViewController로 전환")
-                    guard let self = self else { return }
-                    self.onFinishTransition?()
+                    self?.coordinator?.showOnboardingFinish()
+                case .completeOnboarding:
+                    break  // Handled by OnboardingFinishViewController
                 }
             })
             .disposed(by: disposeBag)

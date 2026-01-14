@@ -15,14 +15,19 @@ import RxSwift
 import Then
 
 
+protocol TicketEditViewControllerDelegate: AnyObject {
+    func ticketEditDidComplete(with updatedTicket: Ticket)
+    func ticketEditDidFail(with error: Error)
+}
+
 final class TicketEditViewController: UIViewController {
-    
+
     // MARK: Properties
     private var ticket: Ticket
     private let viewModel: TicketEditViewModel
     private let disposeBag = DisposeBag()
-    
-    var onSaveCompleted: ((Ticket) -> Void)?
+
+    weak var delegate: TicketEditViewControllerDelegate?
     private let selectedImageRelay = BehaviorRelay<UIImage?>(value: nil)
     private let selectedDateRelay: BehaviorRelay<String>
     private let selectedCategoryRelay: BehaviorRelay<String>
@@ -122,9 +127,9 @@ private extension TicketEditViewController {
     func bindViewModel() {
         let titleInput = titleTextField.rx.text.orEmpty.asObservable()
         let descriptionInput = backTextView.rx.text.orEmpty.asObservable()
-        
+
         let saveTrigger = saveButton.rx.tap.asObservable()
-        
+
         let input = TicketEditViewModel.Input(
             titleInput: titleInput,
             descriptionInput: descriptionInput,
@@ -132,19 +137,19 @@ private extension TicketEditViewController {
             categoryInput: selectedCategoryRelay.asObservable(),
             saveTrigger: saveTrigger
         )
-        
+
         let output = viewModel.transform(input: input)
-        
+
         output.updatedTicket
             .drive(onNext: { [weak self] updatedTicket in
-                guard let self else { return }
-                self.onSaveCompleted?(updatedTicket)
+                self?.delegate?.ticketEditDidComplete(with: updatedTicket)
             })
             .disposed(by: disposeBag)
-        
+
         output.saveFailed
-            .drive(onNext: { error in
+            .drive(onNext: { [weak self] error in
                 print("수정 실패: \(error.localizedDescription)")
+                self?.delegate?.ticketEditDidFail(with: error)
             })
             .disposed(by: disposeBag)
     }

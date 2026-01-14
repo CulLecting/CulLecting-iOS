@@ -21,6 +21,12 @@ public protocol AuthUseCaseProtocol {
     func changePassword(before: String, new: String) -> Completable
     func logout() -> Completable
     func deleteAccount() -> Completable
+    func validateToken() -> Single<Bool>
+
+    // State checking methods
+    var isLoggedIn: Bool { get }
+    var hasSeenOnboarding: Bool { get }
+    func clearTokens()
 }
 
 public final class AuthUseCase: AuthUseCaseProtocol {
@@ -85,5 +91,24 @@ public final class AuthUseCase: AuthUseCaseProtocol {
                 UserDefaults.standard.synchronize()
                 TokenStorage.shared.clearAll()
             })
+    }
+
+    public func validateToken() -> Single<Bool> {
+        repository.fetchUserInfo()
+            .map { _ in true }
+            .catch { _ in .just(false) }
+    }
+
+    // MARK: - State Checking Methods
+    public var isLoggedIn: Bool {
+        return TokenStorage.shared.accessToken != nil
+    }
+
+    public var hasSeenOnboarding: Bool {
+        return UserDefaults.standard.bool(forKey: "hasSeenOnboarding")
+    }
+
+    public func clearTokens() {
+        TokenStorage.shared.clearAll()
     }
 }

@@ -11,8 +11,8 @@ import UIKit
 import Swinject
 
 
-protocol MypageCoordinatorProtocol {
-    
+protocol MypageCoordinatorProtocol: AnyObject {
+    func didLogout()
 }
 
 final class MypageCoordinator: CoordinatorProtocol {
@@ -20,29 +20,27 @@ final class MypageCoordinator: CoordinatorProtocol {
     var navigationController: UINavigationController
     var finishDelegate: (any CoordinatorFinishDelegate)?
     var type = CoordinatorType.mypage
-    
+
     private let injector: Resolver
-    private let viewModel: MypageViewModel
     weak var parentCoordinator: TabbarCoordinator?
-    
+
     init(injector: Resolver) {
         self.injector = injector
-        self.viewModel = injector.resolve(MypageViewModel.self)!
         self.navigationController = UINavigationController()
     }
-    
+
     func start() {
+        let viewModel = injector.resolve(MypageViewModel.self)!
         let mypageVC = MypageViewController(viewModel: viewModel, coordinator: self)
         navigationController.setViewControllers([mypageVC], animated: false)
     }
-    
+
     func didLogout() {
         print("didLogout called")
         parentCoordinator?.logoutAndStartLoginFlow()
     }
-
 }
 
 extension MypageCoordinator: MypageCoordinatorProtocol {
-    
+
 }

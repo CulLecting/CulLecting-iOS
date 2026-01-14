@@ -9,60 +9,58 @@ import UIKit
 
 import FlexLayout
 import PinLayout
+import RxCocoa
+import RxSwift
 import Then
 
 final class OnboardingFinishViewController: UIViewController {
-    
-    var onFinish: (()->Void)?
+
     private let viewModel: OnboardingViewModel
-    
+    private weak var coordinator: OnboardingCoordinatorProtocol?
+    private let disposeBag = DisposeBag()
+    private let startTrigger = PublishRelay<Void>()
+
     private let iconView = UIImageView().then {
         $0.image = UIImage.cullectingIconWhite
     }
-    
+
     private let firstLabel = UILabel().then {
         $0.text = "가입이 완료되었어요!"
         $0.font = .fontPretendard(style: .title18SB)
         $0.textColor = .white
     }
-    
+
     private let secondLabel = UILabel().then {
         $0.text = "지금 바로 컬렉팅 해보세요!"
         $0.font = .fontPretendard(style: .body14M)
         $0.textColor = .white
     }
-    
-    private lazy var startButton = UIButton.makeButton(style: .darkButtonActive, title: "시작하기", cornerRadius: 28).then {
-        $0.addTarget(self, action: #selector(onTapStartButton), for: .touchUpInside)
-    }
-    
-    @objc private func onTapStartButton() {
-        print("onTapStartButton 클릭됨")
-        viewModel.sendOnboardingData()
-        onFinish?()
-    }
-    
+
+    private let startButton = UIButton.makeButton(style: .darkButtonActive, title: "시작하기", cornerRadius: 28)
+
     //MARK: LifeCycle
-    init(viewModel: OnboardingViewModel) {
+    init(viewModel: OnboardingViewModel, coordinator: OnboardingCoordinatorProtocol) {
         self.viewModel = viewModel
+        self.coordinator = coordinator
         super.init(nibName: nil, bundle: nil)
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
     }
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
         setBackgroundImage()
         setUI()
+        bindViewModel()
     }
-    
+
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         container.pin.all(view.pin.safeArea)
@@ -106,5 +104,42 @@ final class OnboardingFinishViewController: UIViewController {
                 $0.addItem(secondLabel)
                     .marginTop(10)
             }
+    }
+}
+
+// MARK: - Binding
+private extension OnboardingFinishViewController {
+
+    func bindViewModel() {
+        // Bind start button to trigger
+        startButton.rx.tap
+            .do(onNext: { print("onTapStartButton 클릭됨") })
+            .bind(to: startTrigger)
+            .disposed(by: disposeBag)
+
+        // Create input with start trigger
+        let input = OnboardingViewModel.Input(
+            nextTrigger: .empty(),
+            backTrigger: .empty(),
+            skipTrigger: .empty(),
+            tapCategory: .empty(),
+            tapLocation: .empty(),
+            startTrigger: startTrigger.asObservable()
+        )
+
+        let output = viewModel.transform(input: input)
+
+        // Handle navigation events
+        output.navigationEvent
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] event in
+                switch event {
+                case .completeOnboarding:
+                    self?.coordinator?.didFinishOnboarding()
+                case .showFinishScreen:
+                    break  // Already on finish screen
+                }
+            })
+            .disposed(by: disposeBag)
     }
 }

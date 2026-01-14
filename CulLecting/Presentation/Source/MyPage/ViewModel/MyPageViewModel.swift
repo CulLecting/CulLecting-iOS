@@ -14,21 +14,24 @@ import RxCocoa
 
 final class MypageViewModel {
     private let useCase: MypageUseCase
+    private let authUseCase: AuthUseCaseProtocol
     private let disposeBag = DisposeBag()
-    
+
     struct Input {
         let logoutTrigger: Observable<Void>
         let deleteTrigger: Observable<Void>
     }
-    
+
     struct Output {
         let nickname: Driver<String>
         let logoutCompleted: Signal<Void>
         let deleteCompleted: Signal<Void>
+        let isLoggedIn: Driver<Bool>
     }
-    
-    init(useCase: MypageUseCase) {
+
+    init(useCase: MypageUseCase, authUseCase: AuthUseCaseProtocol) {
         self.useCase = useCase
+        self.authUseCase = authUseCase
     }
     
     func transform(input: Input) -> Output {
@@ -66,10 +69,13 @@ final class MypageViewModel {
             .disposed(by: disposeBag)
         
         
+        let isLoggedIn = Driver.just(authUseCase.isLoggedIn)
+
         return Output(
             nickname: nicknameRelay.asDriver(),
             logoutCompleted: logoutRelay.asSignal(),
-            deleteCompleted: deleteRelay.asSignal()
+            deleteCompleted: deleteRelay.asSignal(),
+            isLoggedIn: isLoggedIn
         )
     }
 }

@@ -8,8 +8,6 @@
 
 import UIKit
 
-import RxCocoa
-import RxSwift
 import Swinject
 
 
@@ -24,141 +22,86 @@ final class ArchiveCoordinator: CoordinatorProtocol {
     weak var parentCoordinator: TabbarCoordinator?
     var finishDelegate: (any CoordinatorFinishDelegate)?
     var type: CoordinatorType = .archive
-    
+
     let injector: Resolver
-    let viewModel: ArchiveViewModel
-    private let disposeBag = DisposeBag()
-    
+
+    // State for modal edit flow
+    private var presentedEditNavController: UINavigationController?
+    private var onTicketUpdated: ((Ticket) -> Void)?
+
     init(injector: Resolver) {
         self.navigationController = UINavigationController()
         self.injector = injector
-        self.viewModel = injector.resolve(ArchiveViewModel.self)!
     }
 
     func start() {
+        let viewModel = injector.resolve(ArchiveViewModel.self)!
         let archiveVC = ArchiveViewController(viewModel: viewModel, coordinator: self)
         navigationController.setViewControllers([archiveVC], animated: false)
     }
 }
 
 
-//MARK: flow에 따른 메서드들
+// MARK: - Navigation Methods (Pure Navigation Only)
 extension ArchiveCoordinator {
-    
-    func presentAddMenu(from viewController: UIViewController, actionType: TicketActionType) {
-        switch actionType {
-        case .create:
-            viewController.presentAddMenu(
-                onSearch: { [weak self] in self?.showSearchTicketInfo(actionType: actionType) },
-                onPick: { [weak self] in self?.pickPhotoFromLibrary(actionType: actionType) }
-            )
-            
-        case .edit(let ticket):
-            viewController.presentAddMenu(
-                onSearch: { [weak self] in self?.showSearchTicketInfo(actionType: actionType) },
-                onPick: { [weak self] in self?.pickPhotoFromLibrary(actionType: actionType) },
-                onDelete: { [weak self] in self?.deleteTicket(ticket: ticket) }
-            )
-        }
-    }
-    
-    func uploadTicket(image: UIImage) {
-        let useCase = injector.resolve(ArchivingUseCase.self)!
-        
-        useCase.uploadArchiveImg(image: image)
-            .flatMap { id in
-                useCase.fetchTicket(id: id)
-            }
-            .observe(on: MainScheduler.instance)
-            .subscribe(onSuccess: { [weak self] ticket in
-                self?.showTicketDetail(from: ticket)
-            }, onFailure: { error in
-                print("티켓 업로드 실패: \(error.localizedDescription)")
-            })
-            .disposed(by: disposeBag)
-    }
-    
+
     func showSearchTicketInfo(actionType: TicketActionType) {
         let searchVM = injector.resolve(SearchCulturalInfoViewModel.self, argument: actionType)!
         let searchVC = SearchCulutralInfoViewController(viewModel: searchVM, coordinator: self, actionType: .create)
         navigationController.pushViewController(searchVC, animated: true)
     }
-    
-    func pickPhotoFromLibrary(actionType: TicketActionType) {
-        guard let archiveVC = navigationController.viewControllers.first as? ArchiveViewController else { return }
-        archiveVC.openImagePicker(actionType: actionType) { [weak self] selectedImage in
-            switch actionType {
-            case .create:
-                self?.showPhotoPreview(image: selectedImage)
-            case .edit(let ticket):
-                self?.updateTicketImage(ticketId: ticket.id, newImage: selectedImage)
-            }
-        }
-    }
-    
-    func showPhotoPreview(image: UIImage) {
-        let previewVC = PhotoPreviewViewController(image: image) { [weak self] selectedImage in
-            self?.uploadTicket(image: selectedImage)
-        }
+
+    func showPhotoPreview(image: UIImage, onConfirm: @escaping (UIImage) -> Void) {
+        let previewVC = PhotoPreviewViewController(image: image, onConfirm: onConfirm)
         navigationController.pushViewController(previewVC, animated: true)
     }
-    
-    func updateTicketImage(ticketId: String, newImage: UIImage) {
-        let useCase = injector.resolve(ArchivingUseCase.self)!
-        
-        useCase.updateImage(id: ticketId, image: newImage)
-            .andThen(useCase.fetchTicket(id: ticketId))
-            .observe(on: MainScheduler.instance)
-            .subscribe(onSuccess: { [weak self] updatedTicket in
-                self?.showTicketDetail(from: updatedTicket)
-            }, onFailure: { error in
-                print("티켓 업데이트 실패: \(error.localizedDescription)")
-            })
-            .disposed(by: disposeBag)
-    }
-    
-    func deleteTicket(ticket: Ticket) {
-        let useCase = injector.resolve(ArchivingUseCase.self)!
-        
-        useCase.deleteArchiving(id: ticket.id)
-            .observe(on: MainScheduler.instance)
-            .subscribe(onCompleted: { [weak self] in
-                guard let self,
-                      let topVC = self.navigationController.topViewController else { return }
-                
-                topVC.showAlert(
-                    title: "삭제 완료",
-                    message: "티켓이 성공적으로 삭제되었습니다."
-                ) {
-                    self.navigationController.popViewController(animated: true)
-                }
-            }, onError: { error in
-                print("❌ 티켓 삭제 실패: \(error.localizedDescription)")
-            })
-            .disposed(by: disposeBag)
-    }
-    
+
     func showTicketDetail(from ticket: Ticket) {
         let detailVM = injector.resolve(TicketDetailViewModel.self)!
         let detailVC = TicketDetailViewController(viewModel: detailVM, ticket: ticket, coordinator: self)
         navigationController.pushViewController(detailVC, animated: true)
     }
-    
+
     func editTicketDetail(ticket: Ticket, onUpdated: @escaping (Ticket) -> Void) {
         let viewModel = TicketEditViewModel(
             useCase: injector.resolve(ArchivingUseCase.self)!,
             ticket: ticket
         )
-        
+
         let editVC = TicketEditViewController(ticket: ticket, viewModel: viewModel)
+        editVC.delegate = self
+
         let nav = UINavigationController(rootViewController: editVC)
-        
-        editVC.onSaveCompleted = { updatedTicket in
-            onUpdated(updatedTicket)
-            nav.dismiss(animated: true)
-        }
-        
         nav.modalPresentationStyle = .automatic
+
+        // Store state for delegate callbacks
+        self.presentedEditNavController = nav
+        self.onTicketUpdated = onUpdated
+
         navigationController.present(nav, animated: true)
+    }
+
+    func dismissEditModal() {
+        presentedEditNavController?.dismiss(animated: true)
+        presentedEditNavController = nil
+        onTicketUpdated = nil
+    }
+
+    func popViewController() {
+        navigationController.popViewController(animated: true)
+    }
+}
+
+// MARK: - TicketEditViewControllerDelegate
+extension ArchiveCoordinator: TicketEditViewControllerDelegate {
+
+    func ticketEditDidComplete(with updatedTicket: Ticket) {
+        onTicketUpdated?(updatedTicket)
+        dismissEditModal()
+    }
+
+    func ticketEditDidFail(with error: Error) {
+        // Keep modal open, error is already logged in VC
+        // Could show alert here if needed
     }
 }

@@ -159,14 +159,29 @@ public class MypageViewController: UIViewController {
 extension MypageViewController {
     private func setupBinding() {
         print("SetupBinding 호출됨")
-        
-        if TokenStorage.shared.accessToken == nil {
-            userName.text = "Guest 님"
-            logoutButton.isHidden = true
-            exitButton.isHidden   = true
-            return
-        }
-        
+
+        let input = MypageViewModel.Input(
+            logoutTrigger: logoutTrigger.asObservable(),
+            deleteTrigger: deleteTrigger.asObservable()
+        )
+
+        let output = viewModel.transform(input: input)
+
+        // Handle login state from ViewModel
+        output.isLoggedIn
+            .drive(onNext: { [weak self] isLoggedIn in
+                guard let self = self else { return }
+                if !isLoggedIn {
+                    self.userName.text = "Guest 님"
+                    self.logoutButton.isHidden = true
+                    self.exitButton.isHidden = true
+                } else {
+                    self.logoutButton.isHidden = false
+                    self.exitButton.isHidden = false
+                }
+            })
+            .disposed(by: disposeBag)
+
         logoutButton.rx.tap
             .subscribe(onNext: { [weak self] in
                 self?.showAlertWithCancel(
@@ -180,7 +195,7 @@ extension MypageViewController {
                 )
             })
             .disposed(by: disposeBag)
-        
+
         exitButton.rx.tap
             .subscribe(onNext: { [weak self] in
                 self?.showAlertWithCancel(
@@ -194,26 +209,19 @@ extension MypageViewController {
                 )
             })
             .disposed(by: disposeBag)
-        
-        let input = MypageViewModel.Input(
-            logoutTrigger: logoutTrigger.asObservable(),
-            deleteTrigger: deleteTrigger.asObservable()
-        )
-        
-        let output = viewModel.transform(input: input)
-        
+
         output.nickname
             .drive(onNext: { [weak self] nickname in
                 self?.userName.text = "\(nickname) 님"
             })
             .disposed(by: disposeBag)
-        
+
         output.logoutCompleted
             .emit(onNext: { [weak self] in
                 self?.coordinator.didLogout()
             })
             .disposed(by: disposeBag)
-        
+
         output.deleteCompleted
             .emit(onNext: { [weak self] in
                 self?.showAlert(

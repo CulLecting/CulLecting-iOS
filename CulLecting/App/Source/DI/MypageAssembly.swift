@@ -24,7 +24,8 @@ public struct MypageAssembly: Assembly {
 
         container.register(MypageViewModel.self) { r in
             let useCase = r.resolve(MypageUseCase.self)!
-            return MypageViewModel(useCase: useCase)
+            let authUseCase = r.resolve(AuthUseCaseProtocol.self)!
+            return MypageViewModel(useCase: useCase, authUseCase: authUseCase)
         }
 
         container.register(MypageCoordinator.self) { (r, navigationController: UINavigationController) in

@@ -24,7 +24,8 @@ public struct ArchiveAssembly: Assembly {
         
         container.register(ArchiveViewModel.self) { r in
             let useCase = r.resolve(ArchivingUseCase.self)!
-            return ArchiveViewModel(useCase: useCase)
+            let authUseCase = r.resolve(AuthUseCaseProtocol.self)!
+            return ArchiveViewModel(useCase: useCase, authUseCase: authUseCase)
         }
         
         container.register(SearchCulturalInfoViewModel.self) { r, actionType in
