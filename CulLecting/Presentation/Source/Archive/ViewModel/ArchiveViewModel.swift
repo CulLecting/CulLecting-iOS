@@ -109,7 +109,6 @@ final class ArchiveViewModel {
             }
             .asSignal(onErrorSignalWith: .empty())
 
-        // Handle update ticket image
         input.updateTicketImageTrigger
             .flatMapLatest { [weak self] (ticketId, newImage) -> Observable<Ticket> in
                 guard let self = self else { return .empty() }
@@ -127,25 +126,27 @@ final class ArchiveViewModel {
             })
             .disposed(by: disposeBag)
 
-        // Handle delete ticket
         input.deleteTicketTrigger
             .flatMapLatest { [weak self] ticket -> Observable<Void> in
-                guard let self = self else { return .empty() }
+                guard let self = self else {
+                    return Observable.just(())
+                }
+
                 return self.useCase.deleteArchiving(id: ticket.id)
-                    .asObservable()
+                    .andThen(Observable.just(()))
                     .catch { error in
-                        self.navigationEventRelay.accept(.showError("티켓 삭제 실패: \(error.localizedDescription)"))
-                        return .empty()
+                        self.navigationEventRelay.accept(
+                            .showError("티켓 삭제 실패: \(error.localizedDescription)")
+                        )
+                        return Observable.just(())
                     }
             }
             .observe(on: MainScheduler.instance)
-            .subscribe(onNext: { [weak self] _ in
+            .subscribe(onNext: { [weak self] in
                 self?.navigationEventRelay.accept(.showDeleteSuccess)
             })
             .disposed(by: disposeBag)
 
-
-        // Check login state on each fetch
         let isLoggedIn = input.fetchTrigger
             .map { [weak self] _ in
                 self?.authUseCase.isLoggedIn ?? false

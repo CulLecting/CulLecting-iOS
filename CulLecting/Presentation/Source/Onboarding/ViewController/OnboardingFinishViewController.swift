@@ -16,7 +16,7 @@ import Then
 final class OnboardingFinishViewController: UIViewController {
 
     private let viewModel: OnboardingViewModel
-    private weak var coordinator: OnboardingCoordinatorProtocol?
+    private weak var coordinator: OnboardingCoordinator?
     private let disposeBag = DisposeBag()
     private let startTrigger = PublishRelay<Void>()
 
@@ -39,7 +39,7 @@ final class OnboardingFinishViewController: UIViewController {
     private let startButton = UIButton.makeButton(style: .darkButtonActive, title: "시작하기", cornerRadius: 28)
 
     //MARK: LifeCycle
-    init(viewModel: OnboardingViewModel, coordinator: OnboardingCoordinatorProtocol) {
+    init(viewModel: OnboardingViewModel, coordinator: OnboardingCoordinator) {
         self.viewModel = viewModel
         self.coordinator = coordinator
         super.init(nibName: nil, bundle: nil)
@@ -111,13 +111,11 @@ final class OnboardingFinishViewController: UIViewController {
 private extension OnboardingFinishViewController {
 
     func bindViewModel() {
-        // Bind start button to trigger
         startButton.rx.tap
             .do(onNext: { print("onTapStartButton 클릭됨") })
             .bind(to: startTrigger)
             .disposed(by: disposeBag)
 
-        // Create input with start trigger
         let input = OnboardingViewModel.Input(
             nextTrigger: .empty(),
             backTrigger: .empty(),
@@ -129,7 +127,6 @@ private extension OnboardingFinishViewController {
 
         let output = viewModel.transform(input: input)
 
-        // Handle navigation events
         output.navigationEvent
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] event in

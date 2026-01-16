@@ -199,7 +199,7 @@ extension ResetPasswordViewController {
                 switch result {
                 case .success:
                     self.showAlert(title: "비밀번호 변경 성공", message: "비밀번호가 성공적으로 변경되었습니다.") {
-                        self.coordinator?.showLoginFlow()
+                        self.coordinator?.showLoginView()
                     }
                 case .failure(let error):
                     self.showAlert(title: "비밀번호 변경 실패", message: "\(error.localizedDescription)\ncamelcasemail@gmail.com으로 문의를 남겨주세요.")

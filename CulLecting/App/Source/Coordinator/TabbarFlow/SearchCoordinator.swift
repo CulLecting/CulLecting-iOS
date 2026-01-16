@@ -7,6 +7,7 @@
 
 import UIKit
 
+
 final class SearchCoordinator: CoordinatorProtocol {
 
     var childCoordinators: [CoordinatorProtocol] = []

@@ -18,7 +18,7 @@ import Then
 class OnboardingViewController: UIViewController {
 
     private let viewModel: OnboardingViewModel
-    private weak var coordinator: OnboardingCoordinatorProtocol?
+    private weak var coordinator: OnboardingCoordinator?
     private let disposeBag = DisposeBag()
     
     //MARK: UI Components
@@ -73,7 +73,7 @@ class OnboardingViewController: UIViewController {
         bind()
     }
     
-    init(viewModel: OnboardingViewModel, coordinator: OnboardingCoordinatorProtocol) {
+    init(viewModel: OnboardingViewModel, coordinator: OnboardingCoordinator) {
         self.viewModel = viewModel
         self.coordinator = coordinator
         super.init(nibName: nil, bundle: nil)
@@ -180,7 +180,6 @@ class OnboardingViewController: UIViewController {
             })
             .disposed(by: disposeBag)
         
-        // Handle navigation events
         output.navigationEvent
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] event in
@@ -189,7 +188,7 @@ class OnboardingViewController: UIViewController {
                     print("온보딩 완료 - OnboardingFinishedViewController로 전환")
                     self?.coordinator?.showOnboardingFinish()
                 case .completeOnboarding:
-                    break  // Handled by OnboardingFinishViewController
+                    break
                 }
             })
             .disposed(by: disposeBag)

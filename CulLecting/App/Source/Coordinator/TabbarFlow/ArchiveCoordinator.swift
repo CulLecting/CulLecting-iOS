@@ -7,6 +7,7 @@
 
 import UIKit
 
+
 enum TicketActionType {
     case create
     case edit(ticket: Ticket)
@@ -32,8 +33,6 @@ final class ArchiveCoordinator: CoordinatorProtocol {
         navigationController.setViewControllers([archiveVC], animated: false)
     }
 
-    // MARK: - Navigation
-
     func showSearchTicketInfo(actionType: TicketActionType) {
         let searchVC = container.makeSearchCulturalInfoViewController(coordinator: self, actionType: actionType)
         navigationController.pushViewController(searchVC, animated: true)
@@ -55,9 +54,8 @@ final class ArchiveCoordinator: CoordinatorProtocol {
 
         let nav = UINavigationController(rootViewController: editVC)
         nav.modalPresentationStyle = .automatic
-
-        self.presentedEditNavController = nav
-        self.onTicketUpdated = onUpdated
+        presentedEditNavController = nav
+        onTicketUpdated = onUpdated
 
         navigationController.present(nav, animated: true)
     }
@@ -73,7 +71,6 @@ final class ArchiveCoordinator: CoordinatorProtocol {
     }
 }
 
-// MARK: - TicketEditViewControllerDelegate
 extension ArchiveCoordinator: TicketEditViewControllerDelegate {
 
     func ticketEditDidComplete(with updatedTicket: Ticket) {
@@ -81,6 +78,5 @@ extension ArchiveCoordinator: TicketEditViewControllerDelegate {
         dismissEditModal()
     }
 
-    func ticketEditDidFail(with error: Error) {
-    }
+    func ticketEditDidFail(with error: Error) {}
 }

@@ -7,6 +7,7 @@
 
 import UIKit
 
+
 final class HomeCoordinator: CoordinatorProtocol {
 
     var childCoordinators: [CoordinatorProtocol] = []
@@ -24,8 +25,6 @@ final class HomeCoordinator: CoordinatorProtocol {
         let homeVC = container.makeHomeViewController(coordinator: self)
         navigationController.setViewControllers([homeVC], animated: false)
     }
-
-    // MARK: - Navigation
 
     func moveToArchiveTab() {
         (parentCoordinator as? TabbarCoordinator)?.switchTab(to: .archive)

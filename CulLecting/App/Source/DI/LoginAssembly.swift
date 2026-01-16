@@ -10,10 +10,12 @@ import Swinject
 struct LoginAssembly: Assembly {
 
     func assemble(container: Container) {
+        // Repository
         container.register(AuthRepository.self) { _ in
             AuthRepository()
         }.inObjectScope(.container)
 
+        // UseCase
         container.register(AuthUseCase.self) { r in
             let repository = r.resolve(AuthRepository.self)!
             return AuthUseCase(repository: repository)
@@ -23,6 +25,7 @@ struct LoginAssembly: Assembly {
             r.resolve(AuthUseCase.self)!
         }.inObjectScope(.container)
 
+        // ViewModel
         container.register(LoginViewModel.self) { r in
             let useCase = r.resolve(AuthUseCase.self)!
             return LoginViewModel(useCase: useCase)
@@ -36,6 +39,22 @@ struct LoginAssembly: Assembly {
         container.register(ResetPasswordViewModel.self) { r in
             let useCase = r.resolve(AuthUseCase.self)!
             return ResetPasswordViewModel(useCase: useCase)
+        }
+
+        // ViewController
+        container.register(LoginViewController.self) { (r, coordinator: LoginCoordinator) in
+            let viewModel = r.resolve(LoginViewModel.self)!
+            return LoginViewController(viewModel: viewModel, coordinator: coordinator)
+        }
+
+        container.register(JoinViewController.self) { (r, coordinator: LoginCoordinator) in
+            let viewModel = r.resolve(JoinViewModel.self)!
+            return JoinViewController(viewModel: viewModel, coordinator: coordinator)
+        }
+
+        container.register(ResetPasswordViewController.self) { (r, coordinator: LoginCoordinator) in
+            let viewModel = r.resolve(ResetPasswordViewModel.self)!
+            return ResetPasswordViewController(viewModel: viewModel, coordinator: coordinator)
         }
     }
 }

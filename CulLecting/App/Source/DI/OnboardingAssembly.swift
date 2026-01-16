@@ -7,21 +7,39 @@
 
 import Swinject
 
+
 struct OnboardingAssembly: Assembly {
 
     func assemble(container: Container) {
+
         container.register(OnboardingRepository.self) { _ in
             OnboardingRepository()
         }.inObjectScope(.container)
 
         container.register(OnboardingUseCase.self) { r in
-            let repo = r.resolve(OnboardingRepository.self)!
-            return OnboardingUseCase(repository: repo)
+            OnboardingUseCase(
+                repository: r.resolve(OnboardingRepository.self)!
+            )
         }.inObjectScope(.container)
 
         container.register(OnboardingViewModel.self) { r in
-            let useCase = r.resolve(OnboardingUseCase.self)!
-            return OnboardingViewModel(useCase: useCase)
+            OnboardingViewModel(
+                useCase: r.resolve(OnboardingUseCase.self)!
+            )
+        }.inObjectScope(.container)
+
+        container.register(OnboardingViewController.self) { (r, coordinator: OnboardingCoordinator) in
+            OnboardingViewController(
+                viewModel: r.resolve(OnboardingViewModel.self)!,
+                coordinator: coordinator
+            )
+        }
+
+        container.register(OnboardingFinishViewController.self) { (r, coordinator: OnboardingCoordinator) in
+            OnboardingFinishViewController(
+                viewModel: r.resolve(OnboardingViewModel.self)!,
+                coordinator: coordinator
+            )
         }
     }
 }

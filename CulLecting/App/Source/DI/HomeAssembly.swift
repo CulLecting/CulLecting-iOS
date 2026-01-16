@@ -7,9 +7,10 @@
 
 import Swinject
 
-public struct HomeAssembly: Assembly {
+struct HomeAssembly: Assembly {
 
-    public func assemble(container: Container) {
+    func assemble(container: Container) {
+        // Repository
         container.register(CulturalRepositoryProtocol.self) { _ in
             CulturalRepository()
         }
@@ -18,6 +19,7 @@ public struct HomeAssembly: Assembly {
             ArchivingRepository()
         }
 
+        // UseCase
         container.register(HomeUseCaseProtocol.self) { r in
             guard let culturalRepo = r.resolve(CulturalRepositoryProtocol.self),
                   let archiveRepo = r.resolve(ArchiveRepositoryProtocol.self) else {
@@ -26,9 +28,16 @@ public struct HomeAssembly: Assembly {
             return HomeUseCase(archiveRepository: archiveRepo, culturalRepository: culturalRepo)
         }
 
+        // ViewModel
         container.register(HomeViewModel.self) { r in
             let useCase = r.resolve(HomeUseCaseProtocol.self)!
             return HomeViewModel(useCase: useCase)
+        }
+
+        // ViewController
+        container.register(HomeViewController.self) { (r, coordinator: HomeCoordinator) in
+            let viewModel = r.resolve(HomeViewModel.self)!
+            return HomeViewController(viewModel: viewModel, coordinator: coordinator)
         }
     }
 }

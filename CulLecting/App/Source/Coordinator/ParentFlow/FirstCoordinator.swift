@@ -9,21 +9,18 @@ import UIKit
 
 import RxSwift
 
+
 final class FirstCoordinator: CoordinatorProtocol {
-
-    private enum UserDefaultsKey {
-        static let hasSeenOnboarding = "hasSeenOnboarding"
-    }
-
-    private let container: AppDIContainer
-    private let disposeBag = DisposeBag()
 
     var childCoordinators: [CoordinatorProtocol] = []
     var navigationController: UINavigationController
     var parentCoordinator: CoordinatorProtocol?
 
+    private let container: AppDIContainer
+    private let disposeBag = DisposeBag()
+
     private var hasSeenOnboarding: Bool {
-        UserDefaults.standard.bool(forKey: UserDefaultsKey.hasSeenOnboarding)
+        UserDefaults.standard.bool(forKey: "hasSeenOnboarding")
     }
 
     init(navigationController: UINavigationController, container: AppDIContainer) {
@@ -36,9 +33,17 @@ final class FirstCoordinator: CoordinatorProtocol {
         validateAuthenticationStatus()
     }
 
-    // MARK: - Authentication
+    func didLoggedIn() {
+        clearChildCoordinators()
+        hasSeenOnboarding ? showTabbarFlow() : showOnboardingFlow()
+    }
 
-    private func validateAuthenticationStatus() {
+    func didLoggedOut() {
+        clearChildCoordinators()
+        showLoginFlow()
+    }
+    
+    func validateAuthenticationStatus() {
         guard let authUseCase = container.resolveAuthUseCase() else {
             showLoginFlow()
             return
@@ -57,7 +62,7 @@ final class FirstCoordinator: CoordinatorProtocol {
             .disposed(by: disposeBag)
     }
 
-    private func handleAuthValidation(isValid: Bool) {
+    func handleAuthValidation(isValid: Bool) {
         if isValid {
             hasSeenOnboarding ? showTabbarFlow() : showOnboardingFlow()
         } else {
@@ -66,40 +71,26 @@ final class FirstCoordinator: CoordinatorProtocol {
         }
     }
 
-    // MARK: - Flow Presentation
-
-    private func showLoginFlow() {
-        let loginCoordinator = container.makeLoginCoordinator(navigationController: navigationController)
-        addChild(loginCoordinator)
-        loginCoordinator.start()
+    func showLoginFlow() {
+        let coordinator = container.makeLoginCoordinator(navigationController: navigationController)
+        addChild(coordinator)
+        coordinator.start()
     }
 
-    private func showOnboardingFlow() {
+    func showOnboardingFlow() {
         navigationController.isNavigationBarHidden = false
-        let onboardingCoordinator = container.makeOnboardingCoordinator(navigationController: navigationController)
-        addChild(onboardingCoordinator)
-        onboardingCoordinator.start()
+        let coordinator = container.makeOnboardingCoordinator(navigationController: navigationController)
+        addChild(coordinator)
+        coordinator.start()
     }
 
-    private func showTabbarFlow() {
-        let tabbarCoordinator = container.makeTabbarCoordinator(navigationController: navigationController)
-        addChild(tabbarCoordinator)
-        tabbarCoordinator.start()
+    func showTabbarFlow() {
+        let coordinator = container.makeTabbarCoordinator(navigationController: navigationController)
+        addChild(coordinator)
+        coordinator.start()
     }
 
-    // MARK: - Child Coordinator Callbacks
-
-    func didLoggedIn() {
-        clearChildCoordinators()
-        hasSeenOnboarding ? showTabbarFlow() : showOnboardingFlow()
-    }
-
-    func didLoggedOut() {
-        clearChildCoordinators()
-        showLoginFlow()
-    }
-
-    private func clearChildCoordinators() {
+    func clearChildCoordinators() {
         childCoordinators.forEach { $0.finish() }
         childCoordinators.removeAll()
     }

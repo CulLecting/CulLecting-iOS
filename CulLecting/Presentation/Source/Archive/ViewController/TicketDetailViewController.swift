@@ -121,9 +121,31 @@ private extension TicketDetailViewController {
     }
 
     @objc private func optionsButtonTapped() {
-        coordinator.presentAddMenu(from: self, actionType: .edit(ticket: ticket))
-    }
+        let alert = UIAlertController(
+            title: nil,
+            message: nil,
+            preferredStyle: .actionSheet
+        )
 
+        alert.addAction(
+            UIAlertAction(title: "수정하기", style: .default) { [weak self] _ in
+                guard let self else { return }
+                self.coordinator.editTicketDetail(
+                    ticket: self.ticket,
+                    onUpdated: { updatedTicket in
+                        self.viewModel.updateTicket(updatedTicket)
+                    }
+                )
+            }
+        )
+
+        alert.addAction(
+            UIAlertAction(title: "취소", style: .cancel)
+        )
+
+        present(alert, animated: true)
+    }
+    
     @objc private func flipCard() {
         print("flipCard 실행됨")
         let fromView = isFlipped ? ticketBackView : ticketFrontView

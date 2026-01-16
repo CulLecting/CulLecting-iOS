@@ -101,7 +101,6 @@ final class OnboardingViewModel: OnboardingViewModelProtocol {
             })
             .disposed(by: disposeBag)
 
-        // Handle start button tap - send data then navigate
         input.startTrigger
             .flatMapLatest { [weak self] _ -> Observable<Void> in
                 guard let self = self else { return .empty() }
@@ -167,21 +166,25 @@ final class OnboardingViewModel: OnboardingViewModelProtocol {
             navigationEvent: navigationEventRelay.asObservable()
         )
     }
-
-    //MARK: Private Methods
+    
     private func sendOnboardingData() -> Observable<Void> {
         print("sendOnboardingData() called")
+
         let locations = Array(selectedLocationsRelay.value)
         let categories = Array(selectedCategoriesRelay.value)
 
-        return useCase.updateOnboarding(location: locations, category: categories)
-            .asObservable()
+        return useCase.updateOnboarding(
+                location: locations,
+                category: categories
+            )
+            .andThen(Observable.just(()))
             .do(onCompleted: {
                 print("온보딩 데이터 서버 전송 완료")
                 UserDefaults.standard.set(true, forKey: "hasSeenOnboarding")
-            }, onError: { error in
-                print("온보딩 데이터 전송 실패: \(error.localizedDescription)")
             })
-            .catch { _ in .just(()) }  // Continue even if API fails
+            .catch { error in
+                print("온보딩 데이터 전송 실패: \(error.localizedDescription)")
+                return .just(())
+            }
     }
 }

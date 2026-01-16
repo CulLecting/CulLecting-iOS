@@ -7,55 +7,49 @@
 
 import UIKit
 
-public protocol LoginCoordinatorProtocol: CoordinatorProtocol {
-    func showLoginFlow()
-    func didLoginSuccess()
-    func showJoinView()
-    func showResetPassword()
-    func continueAsGuest()
-}
 
-public final class LoginCoordinator: LoginCoordinatorProtocol {
+final class LoginCoordinator: CoordinatorProtocol {
 
-    public var childCoordinators: [CoordinatorProtocol] = []
-    public var navigationController: UINavigationController
-    public var parentCoordinator: CoordinatorProtocol?
+    var childCoordinators: [CoordinatorProtocol] = []
+    var navigationController: UINavigationController
+    var parentCoordinator: CoordinatorProtocol?
 
     private let container: AppDIContainer
 
-    public init(navigationController: UINavigationController, container: AppDIContainer) {
+    init(navigationController: UINavigationController, container: AppDIContainer) {
         self.navigationController = navigationController
         self.container = container
     }
 
-    public func start() {
-        showLoginFlow()
-    }
-
-    // MARK: - Navigation
-
-    public func showLoginFlow() {
+    func start() {
         let loginVC = container.makeLoginViewController(coordinator: self)
         navigationController.setViewControllers([loginVC], animated: false)
     }
+    
+    func didCompleteSignup() {
+        (parentCoordinator as? FirstCoordinator)?.showOnboardingFlow()
+    }
+    
+    func showLoginView() {
+        let loginVC = container.makeLoginViewController(coordinator: self)
+        navigationController.pushViewController(loginVC, animated: true)
+    }
 
-    public func showJoinView() {
+    func showJoinView() {
         let joinVC = container.makeJoinViewController(coordinator: self)
         navigationController.pushViewController(joinVC, animated: true)
     }
 
-    public func showResetPassword() {
+    func showResetPassword() {
         let resetVC = container.makeResetPasswordViewController(coordinator: self)
         navigationController.pushViewController(resetVC, animated: true)
     }
 
-    // MARK: - Flow Completion
-
-    public func didLoginSuccess() {
+    func didLoginSuccess() {
         (parentCoordinator as? FirstCoordinator)?.didLoggedIn()
     }
 
-    public func continueAsGuest() {
+    func continueAsGuest() {
         (parentCoordinator as? FirstCoordinator)?.didLoggedIn()
     }
 }

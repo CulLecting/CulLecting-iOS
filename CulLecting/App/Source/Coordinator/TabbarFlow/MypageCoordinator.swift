@@ -7,11 +7,8 @@
 
 import UIKit
 
-protocol MypageCoordinatorProtocol: CoordinatorProtocol {
-    func didLogout()
-}
 
-final class MypageCoordinator: MypageCoordinatorProtocol {
+final class MypageCoordinator: CoordinatorProtocol {
 
     var childCoordinators: [CoordinatorProtocol] = []
     var navigationController: UINavigationController

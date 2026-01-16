@@ -14,7 +14,7 @@ import RxSwift
 import Then
 
 class LoginViewController: UIViewController {
-    weak var coordinator: LoginCoordinatorProtocol?
+    weak var coordinator: LoginCoordinator?
     
     private let viewModel: LoginViewModel
     private let disposeBag = DisposeBag()
@@ -101,7 +101,7 @@ class LoginViewController: UIViewController {
             .sizeToFit()
     }
     
-    init(viewModel: LoginViewModel, coordinator: LoginCoordinatorProtocol?) {
+    init(viewModel: LoginViewModel, coordinator: LoginCoordinator?) {
         self.viewModel = viewModel
         self.coordinator = coordinator
         super.init(nibName: nil, bundle: nil)

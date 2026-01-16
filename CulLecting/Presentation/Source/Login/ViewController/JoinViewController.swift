@@ -163,7 +163,7 @@ class JoinViewController: UIViewController {
                 switch result {
                 case .success:
                     self.showAlert(title: "회원가입 성공", message: "가입을 축하드립니다! 컬렉팅에게 여러분의 취향을 알려주세요.") {
-                        self.coordinator?.showOnboardingFlow()
+                        self.coordinator?.didCompleteSignup()
                     }
                 case .failure(let error):
                     self.showAlert(title: "회원가입 실패", message: error.localizedDescription)

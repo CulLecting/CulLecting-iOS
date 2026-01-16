@@ -53,99 +53,69 @@ final class AppDIContainer {
 
     // MARK: - Login Flow
 
-    func makeLoginViewController(coordinator: LoginCoordinatorProtocol) -> LoginViewController {
-        let viewModel = container.resolve(LoginViewModel.self)!
-        return LoginViewController(viewModel: viewModel, coordinator: coordinator)
+    func makeLoginViewController(coordinator: LoginCoordinator) -> LoginViewController {
+        container.resolve(LoginViewController.self, argument: coordinator)!
     }
 
-    func makeJoinViewController(coordinator: LoginCoordinatorProtocol) -> JoinViewController {
-        let viewModel = container.resolve(JoinViewModel.self)!
-        return JoinViewController(viewModel: viewModel, coordinator: coordinator)
+    func makeJoinViewController(coordinator: LoginCoordinator) -> JoinViewController {
+        container.resolve(JoinViewController.self, argument: coordinator)!
     }
 
-    func makeResetPasswordViewController(coordinator: LoginCoordinatorProtocol) -> ResetPasswordViewController {
-        let viewModel = container.resolve(ResetPasswordViewModel.self)!
-        return ResetPasswordViewController(viewModel: viewModel, coordinator: coordinator)
+    func makeResetPasswordViewController(coordinator: LoginCoordinator) -> ResetPasswordViewController {
+        container.resolve(ResetPasswordViewController.self, argument: coordinator)!
     }
 
     // MARK: - Onboarding Flow
-
-    func makeOnboardingViewController(
-        viewModel: OnboardingViewModel,
-        coordinator: OnboardingCoordinatorProtocol
-    ) -> OnboardingViewController {
-        OnboardingViewController(viewModel: viewModel, coordinator: coordinator)
+    
+    func makeOnboardingViewController(coordinator: OnboardingCoordinator) -> OnboardingViewController {
+        container.resolve(OnboardingViewController.self, argument: coordinator)!
     }
 
-    func makeOnboardingFinishViewController(
-        viewModel: OnboardingViewModel,
-        coordinator: OnboardingCoordinatorProtocol
-    ) -> OnboardingFinishViewController {
-        OnboardingFinishViewController(viewModel: viewModel, coordinator: coordinator)
-    }
-
-    func makeOnboardingViewModel() -> OnboardingViewModel {
-        container.resolve(OnboardingViewModel.self)!
+    func makeOnboardingFinishViewController(coordinator: OnboardingCoordinator) -> OnboardingFinishViewController {
+        container.resolve(OnboardingFinishViewController.self, argument: coordinator)!
     }
 
     // MARK: - Home Flow
 
     func makeHomeViewController(coordinator: HomeCoordinator) -> HomeViewController {
-        let viewModel = container.resolve(HomeViewModel.self)!
-        return HomeViewController(viewModel: viewModel, coordinator: coordinator)
+        container.resolve(HomeViewController.self, argument: coordinator)!
     }
 
     // MARK: - Archive Flow
 
     func makeArchiveViewController(coordinator: ArchiveCoordinator) -> ArchiveViewController {
-        let viewModel = container.resolve(ArchiveViewModel.self)!
-        return ArchiveViewController(viewModel: viewModel, coordinator: coordinator)
+        container.resolve(ArchiveViewController.self, argument: coordinator)!
     }
 
-    func makeSearchCulturalInfoViewController(
-        coordinator: ArchiveCoordinator,
-        actionType: TicketActionType
-    ) -> SearchCulutralInfoViewController {
-        let viewModel = container.resolve(SearchCulturalInfoViewModel.self, argument: actionType)!
-        return SearchCulutralInfoViewController(viewModel: viewModel, coordinator: coordinator, actionType: actionType)
+    func makeSearchCulturalInfoViewController(coordinator: ArchiveCoordinator, actionType: TicketActionType) -> SearchCulutralInfoViewController {
+        container.resolve(SearchCulutralInfoViewController.self, arguments: coordinator, actionType)!
     }
 
-    func makePhotoPreviewViewController(
-        image: UIImage,
-        onConfirm: @escaping (UIImage) -> Void
-    ) -> PhotoPreviewViewController {
-        PhotoPreviewViewController(image: image, onConfirm: onConfirm)
+    func makePhotoPreviewViewController(image: UIImage, onConfirm: @escaping (UIImage) -> Void) -> PhotoPreviewViewController {
+        container.resolve(PhotoPreviewViewController.self, arguments: image, onConfirm)!
     }
 
-    func makeTicketDetailViewController(
-        coordinator: ArchiveCoordinator,
-        ticket: Ticket
-    ) -> TicketDetailViewController {
-        let viewModel = container.resolve(TicketDetailViewModel.self)!
-        return TicketDetailViewController(viewModel: viewModel, ticket: ticket, coordinator: coordinator)
+    func makeTicketDetailViewController(coordinator: ArchiveCoordinator, ticket: Ticket) -> TicketDetailViewController {
+        container.resolve(TicketDetailViewController.self, arguments: coordinator, ticket)!
     }
 
     func makeTicketEditViewController(ticket: Ticket) -> TicketEditViewController {
-        let useCase = container.resolve(ArchivingUseCase.self)!
-        let viewModel = TicketEditViewModel(useCase: useCase, ticket: ticket)
-        return TicketEditViewController(ticket: ticket, viewModel: viewModel)
+        container.resolve(TicketEditViewController.self, argument: ticket)!
     }
 
     // MARK: - Search Flow
 
     func makeSearchViewController(coordinator: SearchCoordinator) -> SearchViewController {
-        let viewModel = container.resolve(SearchViewModel.self)!
-        return SearchViewController(viewModel: viewModel, coordinator: coordinator)
+        container.resolve(SearchViewController.self, argument: coordinator)!
     }
 
     // MARK: - Mypage Flow
 
     func makeMypageViewController(coordinator: MypageCoordinator) -> MypageViewController {
-        let viewModel = container.resolve(MypageViewModel.self)!
-        return MypageViewController(viewModel: viewModel, coordinator: coordinator)
+        container.resolve(MypageViewController.self, argument: coordinator)!
     }
 
-    // MARK: - UseCases (for coordinators that need direct access)
+    // MARK: - UseCases
 
     func resolveAuthUseCase() -> AuthUseCaseProtocol? {
         container.resolve(AuthUseCaseProtocol.self)
