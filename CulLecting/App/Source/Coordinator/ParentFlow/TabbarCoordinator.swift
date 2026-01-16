@@ -5,89 +5,45 @@
 //  Created by 김승희 on 4/6/25.
 //
 
-
 import UIKit
 
-import Swinject
-
 public final class TabbarCoordinator: CoordinatorProtocol {
-    
-    // MARK: Dependency
-    public struct Dependency {
-        let navigationController: UINavigationController
-        let injector: Resolver
-        weak var finishDelegate: CoordinatorFinishDelegate?
-        
-        public init(
-            navigationController: UINavigationController,
-            injector: Resolver,
-            finishDelegate: CoordinatorFinishDelegate? = nil
-        ) {
-            self.navigationController = navigationController
-            self.injector = injector
-            self.finishDelegate = finishDelegate
-        }
-    }
-    
-    // MARK: Properties
+
     public var childCoordinators: [CoordinatorProtocol] = []
     public var navigationController: UINavigationController
-    public var type: CoordinatorType = .tabbar
-    public weak var finishDelegate: CoordinatorFinishDelegate?
-    public weak var parentCoordinator: FirstCoordinatorProtocol?
-    
-    private let dependency: Dependency
+    public var parentCoordinator: CoordinatorProtocol?
+
+    private let container: AppDIContainer
     private let tabBarController = UITabBarController()
-    
-    // MARK: init
-    public init(dependency: Dependency) {
-        self.dependency = dependency
-        self.navigationController = dependency.navigationController
+
+    public init(navigationController: UINavigationController, container: AppDIContainer) {
+        self.navigationController = navigationController
+        self.container = container
     }
-    
-    // MARK: Start
+
     public func start() {
         setupChildCoordinators()
         setupTabBarController()
         setTabBarAppearance()
-        
         navigationController.setViewControllers([tabBarController], animated: false)
     }
-    
-    // MARK: Finish
-    public func finish() {
-        childCoordinators.forEach { $0.finish() }
-        childCoordinators.removeAll()
-        finishDelegate?.coordinatorDidFinish(childCoordinator: self)
-    }
-}
 
-// MARK: methods
-extension TabbarCoordinator {
-    
-    func setupChildCoordinators() {
-        let homeCoordinator = HomeCoordinator(injector: dependency.injector)
-        let archiveCoordinator = ArchiveCoordinator(injector: dependency.injector)
-        let searchCoordinator = SearchCoordinator(injector: dependency.injector)
-        let myPageCoordinator = MypageCoordinator(injector: dependency.injector)
-        
-        homeCoordinator.parentCoordinator = self
-        archiveCoordinator.parentCoordinator = self
-        searchCoordinator.parentCoordinator = self
-        myPageCoordinator.parentCoordinator = self
-        
-        childCoordinators = [
-            homeCoordinator,
-            archiveCoordinator,
-            searchCoordinator,
-            myPageCoordinator
-        ]
-        
-        childCoordinators.forEach { $0.start() }
+    // MARK: - Setup
+
+    private func setupChildCoordinators() {
+        let homeCoordinator = container.makeHomeCoordinator()
+        let archiveCoordinator = container.makeArchiveCoordinator()
+        let searchCoordinator = container.makeSearchCoordinator()
+        let mypageCoordinator = container.makeMypageCoordinator()
+
+        [homeCoordinator, archiveCoordinator, searchCoordinator, mypageCoordinator].forEach {
+            addChild($0)
+            $0.start()
+        }
     }
-    
-    func setupTabBarController() {
-        tabBarController.viewControllers = childCoordinators.enumerated().map { (index, coordinator) in
+
+    private func setupTabBarController() {
+        tabBarController.viewControllers = childCoordinators.enumerated().map { index, coordinator in
             let nav = coordinator.navigationController
             guard let tabItem = TabItem(rawValue: index) else { return nav }
             nav.tabBarItem = UITabBarItem(
@@ -98,8 +54,8 @@ extension TabbarCoordinator {
             return nav
         }
     }
-    
-    func setTabBarAppearance() {
+
+    private func setTabBarAppearance() {
         tabBarController.tabBar.backgroundColor = .white
         tabBarController.tabBar.tintColor = .primary50
         tabBarController.tabBar.layer.shadowColor = UIColor.black.cgColor
@@ -108,7 +64,9 @@ extension TabbarCoordinator {
         tabBarController.tabBar.layer.shadowRadius = 4
         tabBarController.tabBar.layer.masksToBounds = false
     }
-    
+
+    // MARK: - Tab Switching
+
     func switchTab(to type: CoordinatorType) {
         switch type {
         case .home:
@@ -123,10 +81,10 @@ extension TabbarCoordinator {
             break
         }
     }
-    
-    func logoutAndStartLoginFlow() {
-        print("logoutAndStartLoginFlow called")
-        parentCoordinator?.didLoggedOut()
-    }
 
+    // MARK: - Logout
+
+    func didLogout() {
+        (parentCoordinator as? FirstCoordinator)?.didLoggedOut()
+    }
 }

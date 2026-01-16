@@ -5,17 +5,15 @@
 //  Created by 김승희 on 4/7/25.
 //
 
-
-import UIKit
-
 import Swinject
 
 public struct HomeAssembly: Assembly {
+
     public func assemble(container: Container) {
         container.register(CulturalRepositoryProtocol.self) { _ in
             CulturalRepository()
         }
-        
+
         container.register(ArchiveRepositoryProtocol.self) { _ in
             ArchivingRepository()
         }
@@ -31,10 +29,6 @@ public struct HomeAssembly: Assembly {
         container.register(HomeViewModel.self) { r in
             let useCase = r.resolve(HomeUseCaseProtocol.self)!
             return HomeViewModel(useCase: useCase)
-        }
-
-        container.register(HomeCoordinator.self) { (r, navigationController: UINavigationController) in
-            return HomeCoordinator(injector: r)
         }
     }
 }

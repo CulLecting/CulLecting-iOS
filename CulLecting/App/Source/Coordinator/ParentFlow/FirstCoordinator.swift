@@ -8,60 +8,55 @@
 import UIKit
 
 import RxSwift
-import Swinject
 
+final class FirstCoordinator: CoordinatorProtocol {
 
-class FirstCoordinator: CoordinatorProtocol {
-    
-    struct Dependency {
-        let navigationController: UINavigationController
-        let injector: Resolver
+    private enum UserDefaultsKey {
+        static let hasSeenOnboarding = "hasSeenOnboarding"
     }
-    
-    private let dependency: Dependency
-    public var childCoordinators: [CoordinatorProtocol] = []
-    public var navigationController: UINavigationController
-    public var parentCoordinator: CoordinatorProtocol?
-    
+
+    private let container: AppDIContainer
     private let disposeBag = DisposeBag()
-    
-    private var haveToken: Bool {
-        TokenStorage.shared.accessToken != nil
-    }
-    
+
+    var childCoordinators: [CoordinatorProtocol] = []
+    var navigationController: UINavigationController
+    var parentCoordinator: CoordinatorProtocol?
+
     private var hasSeenOnboarding: Bool {
-        UserDefaults.standard.bool(forKey: "hasSeenOnboarding")
+        UserDefaults.standard.bool(forKey: UserDefaultsKey.hasSeenOnboarding)
     }
-    
-    init(dependency: Dependency) {
-        self.dependency = dependency
-        self.navigationController = dependency.navigationController
+
+    init(navigationController: UINavigationController, container: AppDIContainer) {
+        self.navigationController = navigationController
+        self.container = container
     }
-    
+
     func start() {
         navigationController.isNavigationBarHidden = true
         validateAuthenticationStatus()
     }
-    
-    func finish() {
-        childCoordinators.removeAll()
-    }
-    
-    // MARK: - 인증 상태 확인 (FirstCoordinator의 핵심 책임)
+
+    // MARK: - Authentication
+
     private func validateAuthenticationStatus() {
-        guard let authUseCase = dependency.injector.resolve(AuthUseCaseProtocol.self) else {
+        guard let authUseCase = container.resolveAuthUseCase() else {
             showLoginFlow()
             return
         }
-        
+
         authUseCase.validateToken()
             .observe(on: MainScheduler.instance)
-            .subscribe(onSuccess: { [weak self] isValid in
-                self?.handleAuthValidation(isValid: isValid)
-            })
+            .subscribe(
+                onSuccess: { [weak self] isValid in
+                    self?.handleAuthValidation(isValid: isValid)
+                },
+                onFailure: { [weak self] _ in
+                    self?.showLoginFlow()
+                }
+            )
             .disposed(by: disposeBag)
     }
-    
+
     private func handleAuthValidation(isValid: Bool) {
         if isValid {
             hasSeenOnboarding ? showTabbarFlow() : showOnboardingFlow()
@@ -70,53 +65,42 @@ class FirstCoordinator: CoordinatorProtocol {
             showLoginFlow()
         }
     }
-    
-    // MARK: - Flow 시작
+
+    // MARK: - Flow Presentation
+
     private func showLoginFlow() {
-        guard let loginCoordinator = dependency.injector.resolve(LoginCoordinator.self, argument: navigationController) else {
-            return
-        }
-        
-        childCoordinators.append(loginCoordinator)
-        loginCoordinator.parentCoordinator = self
-        
-        navigationController.setViewControllers([loginCoordinator.navigationController], animated: false)
+        let loginCoordinator = container.makeLoginCoordinator(navigationController: navigationController)
+        addChild(loginCoordinator)
         loginCoordinator.start()
     }
-    
+
     private func showOnboardingFlow() {
         navigationController.isNavigationBarHidden = false
-        
-        guard let onboardingCoordinator = dependency.injector.resolve(OnboardingCoordinator.self, argument: navigationController) else {
-            return
-        }
-        
-        childCoordinators.append(onboardingCoordinator)
-        onboardingCoordinator.parentCoordinator = self
-        
-        navigationController.setViewControllers([onboardingCoordinator.navigationController], animated: false)
+        let onboardingCoordinator = container.makeOnboardingCoordinator(navigationController: navigationController)
+        addChild(onboardingCoordinator)
         onboardingCoordinator.start()
     }
-    
+
     private func showTabbarFlow() {
-        guard let tabbarCoordinator = dependency.injector.resolve(TabbarCoordinator.self, argument: navigationController) else {
-            return
-        }
-        
-        childCoordinators.append(tabbarCoordinator)
-        tabbarCoordinator.parentCoordinator = self
-        
-        navigationController.setViewControllers([tabbarCoordinator.navigationController], animated: false)
+        let tabbarCoordinator = container.makeTabbarCoordinator(navigationController: navigationController)
+        addChild(tabbarCoordinator)
         tabbarCoordinator.start()
     }
-    
+
+    // MARK: - Child Coordinator Callbacks
+
     func didLoggedIn() {
-        childCoordinators.removeAll()
+        clearChildCoordinators()
         hasSeenOnboarding ? showTabbarFlow() : showOnboardingFlow()
     }
-    
+
     func didLoggedOut() {
-        childCoordinators.removeAll()
+        clearChildCoordinators()
         showLoginFlow()
+    }
+
+    private func clearChildCoordinators() {
+        childCoordinators.forEach { $0.finish() }
+        childCoordinators.removeAll()
     }
 }
