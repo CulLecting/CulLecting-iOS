@@ -42,7 +42,7 @@ final class HomeViewModel {
         return formatter
     }()
 
-    // MARK: Init
+    // MARK: init
     init(useCase: HomeUseCaseProtocol) {
         self.useCase = useCase
     }
@@ -51,7 +51,7 @@ final class HomeViewModel {
     func transform(input: Input) -> Output {
         input.viewWillAppearTrigger
             .subscribe(onNext: { [weak self] in
-                self?.fetchMyTickets()
+                self?.fetchArchiving()
                 self?.fetchRecommendCulturals()
                 self?.fetchLatestCulturals()
                 self?.updateSelectedDate(Date())
@@ -61,7 +61,12 @@ final class HomeViewModel {
         input.selectedDate
             .flatMapLatest { [weak self] date -> Observable<[CulturalContentEntity]> in
                 guard let self else { return .empty() }
-                return self.useCase.findCultural(from: date).asObservable()
+                return self.useCase.findCultural(from: date)
+                    .asObservable()
+                    .catch { error in
+                        print("📆 날짜별 문화콘텐츠 로딩 실패: \(error) - 더미 데이터 사용")
+                        return .just(CulturalContentEntity.todayEvents)
+                    }
             }
             .bind(to: todayCulturalsRelay)
             .disposed(by: disposeBag)
@@ -75,42 +80,50 @@ final class HomeViewModel {
     }
     
     // MARK: Fetch Methods
-    private func fetchMyTickets() {
-        useCase.fetchMyArchivingTickets()
+    private func fetchArchiving() {
+        useCase.fetchArchiving()
+            .catch { error -> Single<[Ticket]> in
+                print("⚠️ 아카이빙 티켓 로딩 실패: \(error) - 더미 데이터 사용")
+                return .just(Ticket.mockTickets)
+            }
             .subscribe(onSuccess: { [weak self] tickets in
                 self?.myTicketsRelay.accept(tickets)
-            }, onFailure: { error in
-                print("🎫 아카이빙 티켓 로딩 실패: \(error)")
             })
             .disposed(by: disposeBag)
     }
 
     private func fetchRecommendCulturals() {
         useCase.fetchRecommendCultural()
+            .catch { error -> Single<[CulturalContentEntity]> in
+                print("⚠️ 추천 콘텐츠 로딩 실패: \(error) - 더미 데이터 사용")
+                return .just(CulturalContentEntity.recommendedContents)
+            }
             .subscribe(onSuccess: { [weak self] contents in
                 self?.recommendCulturalsRelay.accept(contents)
-            }, onFailure: { error in
-                print("🌟 추천 콘텐츠 로딩 실패: \(error)")
             })
             .disposed(by: disposeBag)
     }
 
     private func fetchLatestCulturals() {
         useCase.fetchLatestCultural()
+            .catch { error -> Single<[String: [CulturalContentEntity]]> in
+                print("⚠️ 최근 콘텐츠 로딩 실패: \(error) - 더미 데이터 사용")
+                return .just(CulturalContentEntity.latestContents)
+            }
             .subscribe(onSuccess: { [weak self] contents in
                 self?.latestCulturalsRelay.accept(contents)
-            }, onFailure: { error in
-                print("🆕 최근 콘텐츠 로딩 실패: \(error)")
             })
             .disposed(by: disposeBag)
     }
-    
+
     func updateSelectedDate(_ date: Date) {
         useCase.findCultural(from: date)
+            .catch { error -> Single<[CulturalContentEntity]> in
+                print("⚠️ 날짜별 문화콘텐츠 로딩 실패: \(error) - 더미 데이터 사용")
+                return .just(CulturalContentEntity.todayEvents)
+            }
             .subscribe(onSuccess: { [weak self] contents in
                 self?.todayCulturalsRelay.accept(contents)
-            }, onFailure: { error in
-                print("📆 날짜별 문화콘텐츠 로딩 실패: \(error)")
             })
             .disposed(by: disposeBag)
     }

@@ -35,10 +35,6 @@ struct UpdateTemplateRequestDTO: Encodable {
     let template: String
 }
 
-struct UploadArchiveImgResponseDTO: Decodable {
-    let data: UploadArchiveImgDataDTO
-}
-
 struct UploadArchiveImgDataDTO: Decodable {
     let id: String
 }

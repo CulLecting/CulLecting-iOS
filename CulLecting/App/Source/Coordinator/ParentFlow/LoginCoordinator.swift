@@ -7,53 +7,49 @@
 
 import UIKit
 
-import Swinject
 
-public protocol LoginCoordinatorProtocol: CoordinatorProtocol {
-    func showLoginFlow()
-    func didLoginSuccess()
-    func showJoinView()
-    func showOnboardingFlow()
-}
+final class LoginCoordinator: CoordinatorProtocol {
 
-public final class LoginCoordinator: LoginCoordinatorProtocol {
+    var childCoordinators: [CoordinatorProtocol] = []
+    var navigationController: UINavigationController
+    var parentCoordinator: CoordinatorProtocol?
 
-    public var childCoordinators: [CoordinatorProtocol] = []
-    public var navigationController: UINavigationController
-    public var type: CoordinatorType = .login
-    public weak var parentCoordinator: FirstCoordinatorProtocol?
-    
-    public var finishDelegate: CoordinatorFinishDelegate?
-    
-    private let container: Resolver
-    
-    public init(navigationController: UINavigationController, container: Resolver) {
+    private let container: AppDIContainer
+
+    init(navigationController: UINavigationController, container: AppDIContainer) {
         self.navigationController = navigationController
         self.container = container
     }
-    
-    public func start() {
-        showLoginFlow()
-    }
-    
-    public func showLoginFlow() {
-        guard let viewModel = container.resolve(LoginViewModel.self) else { return }
-        let loginVC = LoginViewController(viewModel: viewModel, coordinator: self)
+
+    func start() {
+        let loginVC = container.makeLoginViewController(coordinator: self)
         navigationController.setViewControllers([loginVC], animated: false)
     }
     
-    public func didLoginSuccess() {
-        parentCoordinator?.didLoggedIn()
+    func didCompleteSignup() {
+        (parentCoordinator as? FirstCoordinator)?.showOnboardingFlow()
     }
     
-    public func showJoinView() {
-        guard let viewModel = container.resolve(JoinViewModel.self) else { return }
-        let joinVC = JoinViewController(viewModel: viewModel, coordinator: self)
-        navigationController.pushViewController(joinVC, animated: true)
-    }
-    
-    public func showOnboardingFlow() {
-        parentCoordinator?.showOnboardingFlow()
+    func showLoginView() {
+        let loginVC = container.makeLoginViewController(coordinator: self)
+        navigationController.pushViewController(loginVC, animated: true)
     }
 
+    func showJoinView() {
+        let joinVC = container.makeJoinViewController(coordinator: self)
+        navigationController.pushViewController(joinVC, animated: true)
+    }
+
+    func showResetPassword() {
+        let resetVC = container.makeResetPasswordViewController(coordinator: self)
+        navigationController.pushViewController(resetVC, animated: true)
+    }
+
+    func didLoginSuccess() {
+        (parentCoordinator as? FirstCoordinator)?.didLoggedIn()
+    }
+
+    func continueAsGuest() {
+        (parentCoordinator as? FirstCoordinator)?.didLoggedIn()
+    }
 }

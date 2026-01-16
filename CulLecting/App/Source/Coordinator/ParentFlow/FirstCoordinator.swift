@@ -6,120 +6,92 @@
 //
 
 import UIKit
-import Swinject
 
-public protocol FirstCoordinatorProtocol: CoordinatorProtocol {
-    func showLoginFlow()
-    func showOnboardingFlow()
-    func showTabbarFlow()
-    func setTabbarCoordinator()
-    func getChildCoordinator(_ coordinatorType: CoordinatorType) -> CoordinatorProtocol?
-    func didLoggedIn()
-    func didLoggedOut()
-}
+import RxSwift
 
-// 부모 코디네이터: 앱 실행과 동시에 앱에 대한 제어권을 갖는 첫 번째 코디네이터
-class FirstCoordinator: FirstCoordinatorProtocol {
-    
-    public struct Dependency {
-        let navigationController: UINavigationController
-        let injector: Resolver
-    }
-    
-    private let dependency: Dependency
-    public var childCoordinators = [CoordinatorProtocol]()
-    public var navigationController: UINavigationController
-    public var type: CoordinatorType = .app
-    public weak var finishDelegate: CoordinatorFinishDelegate?
-    
-    //MARK: 토큰 & 온보딩 처리
-    private var haveToken: Bool {
-        return TokenStorage.shared.accessToken != nil
-    }
+
+final class FirstCoordinator: CoordinatorProtocol {
+
+    var childCoordinators: [CoordinatorProtocol] = []
+    var navigationController: UINavigationController
+    var parentCoordinator: CoordinatorProtocol?
+
+    private let container: AppDIContainer
+    private let disposeBag = DisposeBag()
 
     private var hasSeenOnboarding: Bool {
-        return UserDefaults.standard.bool(forKey: "hasSeenOnboarding")
+        UserDefaults.standard.bool(forKey: "hasSeenOnboarding")
     }
 
-    //MARK: init
-    public init(dependency: Dependency) {
-        self.dependency = dependency
-        self.navigationController = dependency.navigationController
+    init(navigationController: UINavigationController, container: AppDIContainer) {
+        self.navigationController = navigationController
+        self.container = container
     }
-    
-    public func start() {
+
+    func start() {
         navigationController.isNavigationBarHidden = true
-        haveToken ? ( hasSeenOnboarding ? showTabbarFlow() : showOnboardingFlow() ) : showLoginFlow()
+        validateAuthenticationStatus()
     }
-    
-    func showLoginFlow() {
-        print("showLoginFlow 실행됨")
-        // DI Container를 통해 LoginCoordinator 생성
-        guard let loginCoordinator = dependency.injector.resolve(LoginCoordinator.self, argument: navigationController) else { return }
-        loginCoordinator.parentCoordinator = self
-        childCoordinators.append(loginCoordinator)
-        loginCoordinator.start()
-    }
-    
-    func showOnboardingFlow() {
-        print("showOnboardingFlow 실행됨")
-        guard let onboardingCoordinator = dependency.injector.resolve(OnboardingCoordinator.self, argument: navigationController) else { return }
-        onboardingCoordinator.parentCoordinator = self
-        onboardingCoordinator.finishDelegate = self
-        childCoordinators.append(onboardingCoordinator)
-        onboardingCoordinator.start()
-    }
-    
-    /// 탭바 컨트롤러 플로우
-    func showTabbarFlow() {
-        print("ShowTabbarFlow 실행됨")
-        if getChildCoordinator(.tabbar) == nil {
-            setTabbarCoordinator()
-        }
-        guard let tabbarCoordinator = getChildCoordinator(.tabbar) as? TabbarCoordinator else { return }
-        tabbarCoordinator.parentCoordinator = self
-        tabbarCoordinator.start()
-    }
-    
-    /// 탭바 컨트롤러 세팅, 자식 코디네이터로 등록
-    func setTabbarCoordinator() {
-        guard let tabbarCoordinator = dependency.injector.resolve(TabbarCoordinator.self, argument: navigationController) else {
-            fatalError("TabbarCoordinator Resolve 실패")
-        }
-        tabbarCoordinator.parentCoordinator = self
-        childCoordinators.append(tabbarCoordinator)
-    }
-    
-    /// 앱 코디네이터의 자식 코디네이터 get
-    func getChildCoordinator(_ coordinatorType: CoordinatorType) -> (any CoordinatorProtocol)? {
-        switch coordinatorType {
-        case .tabbar:
-            return childCoordinators.first { $0.type == .tabbar }
-        default:
-            return nil
-        }
-    }
-    
-}
 
-/// 자식 코디네이터가 종료되었을 때 실행할 메서드
-extension FirstCoordinator: CoordinatorFinishDelegate {
-    func coordinatorDidFinish(childCoordinator: CoordinatorProtocol) {
-        print("coordinatorDidFinish() 호출됨")
-        self.childCoordinators = self.childCoordinators.filter { $0.type != childCoordinator.type }
-        print("OnboardingFinish - TabbarFlowStart")
-        showTabbarFlow()
-    }
-}
-
-/// 이벤트 처리
-extension FirstCoordinator {
-    public func didLoggedIn() {
+    func didLoggedIn() {
+        clearChildCoordinators()
         hasSeenOnboarding ? showTabbarFlow() : showOnboardingFlow()
     }
-    
-    public func didLoggedOut() {
-        childCoordinators.removeAll()
+
+    func didLoggedOut() {
+        clearChildCoordinators()
         showLoginFlow()
+    }
+    
+    func validateAuthenticationStatus() {
+        guard let authUseCase = container.resolveAuthUseCase() else {
+            showLoginFlow()
+            return
+        }
+
+        authUseCase.validateToken()
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onSuccess: { [weak self] isValid in
+                    self?.handleAuthValidation(isValid: isValid)
+                },
+                onFailure: { [weak self] _ in
+                    self?.showLoginFlow()
+                }
+            )
+            .disposed(by: disposeBag)
+    }
+
+    func handleAuthValidation(isValid: Bool) {
+        if isValid {
+            hasSeenOnboarding ? showTabbarFlow() : showOnboardingFlow()
+        } else {
+            TokenStorage.shared.clearAll()
+            showLoginFlow()
+        }
+    }
+
+    func showLoginFlow() {
+        let coordinator = container.makeLoginCoordinator(navigationController: navigationController)
+        addChild(coordinator)
+        coordinator.start()
+    }
+
+    func showOnboardingFlow() {
+        navigationController.isNavigationBarHidden = false
+        let coordinator = container.makeOnboardingCoordinator(navigationController: navigationController)
+        addChild(coordinator)
+        coordinator.start()
+    }
+
+    func showTabbarFlow() {
+        let coordinator = container.makeTabbarCoordinator(navigationController: navigationController)
+        addChild(coordinator)
+        coordinator.start()
+    }
+
+    func clearChildCoordinators() {
+        childCoordinators.forEach { $0.finish() }
+        childCoordinators.removeAll()
     }
 }

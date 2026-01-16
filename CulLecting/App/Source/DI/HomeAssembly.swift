@@ -5,21 +5,21 @@
 //  Created by 김승희 on 4/7/25.
 //
 
-
-import UIKit
-
 import Swinject
 
-public struct HomeAssembly: Assembly {
-    public func assemble(container: Container) {
+struct HomeAssembly: Assembly {
+
+    func assemble(container: Container) {
+        // Repository
         container.register(CulturalRepositoryProtocol.self) { _ in
             CulturalRepository()
         }
-        
+
         container.register(ArchiveRepositoryProtocol.self) { _ in
             ArchivingRepository()
         }
 
+        // UseCase
         container.register(HomeUseCaseProtocol.self) { r in
             guard let culturalRepo = r.resolve(CulturalRepositoryProtocol.self),
                   let archiveRepo = r.resolve(ArchiveRepositoryProtocol.self) else {
@@ -28,13 +28,16 @@ public struct HomeAssembly: Assembly {
             return HomeUseCase(archiveRepository: archiveRepo, culturalRepository: culturalRepo)
         }
 
+        // ViewModel
         container.register(HomeViewModel.self) { r in
             let useCase = r.resolve(HomeUseCaseProtocol.self)!
             return HomeViewModel(useCase: useCase)
         }
 
-        container.register(HomeCoordinator.self) { (r, navigationController: UINavigationController) in
-            return HomeCoordinator(injector: r)
+        // ViewController
+        container.register(HomeViewController.self) { (r, coordinator: HomeCoordinator) in
+            let viewModel = r.resolve(HomeViewModel.self)!
+            return HomeViewController(viewModel: viewModel, coordinator: coordinator)
         }
     }
 }

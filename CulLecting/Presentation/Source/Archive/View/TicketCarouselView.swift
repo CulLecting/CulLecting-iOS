@@ -2,6 +2,10 @@
 //  CulLecting
 //
 //  Created by 김승희 on 2025/04/15.
+//  Refactored to UICollectionView
+
+
+
 
 import UIKit
 
@@ -9,26 +13,39 @@ import FlexLayout
 import PinLayout
 import Then
 
-final class TicketCarouselView: UIView, UIScrollViewDelegate {
+
+final class TicketCarouselView: UIView {
 
     // MARK: Properties
     private var tickets: [Ticket] = []
-    private var cardViews: [TicketView] = []
-    private let cardWidthRatio: CGFloat = 0.7
-    private let cardHeightRatio: CGFloat = 0.8
+
+    var scrollCallback: ((Int) -> Void)?
+    var onTicketTapped: ((Ticket) -> Void)?
+
     private let cardSpacing: CGFloat = 10
 
-    var onCardTapped: ((Ticket) -> Void)?
-    var scrollCallback: ((Int) -> Void)?
+    private lazy var flowLayout: UICollectionViewFlowLayout = {
+        let layout = UICollectionViewFlowLayout()
+        layout.scrollDirection = .horizontal
+        layout.minimumLineSpacing = cardSpacing
+        return layout
+    }()
 
-    private let scrollView = UIScrollView().then {
-        $0.showsHorizontalScrollIndicator = false
-        $0.isPagingEnabled = false
-        $0.decelerationRate = .fast
-        $0.clipsToBounds = false
-    }
+    private lazy var collectionView: UICollectionView = {
+        let cv = UICollectionView(frame: .zero, collectionViewLayout: flowLayout)
+        cv.backgroundColor = .clear
+        cv.showsHorizontalScrollIndicator = false
+        cv.decelerationRate = .fast
+        cv.clipsToBounds = false
+        cv.delegate = self
+        cv.dataSource = self
+        cv.register(TicketCarouselCell.self, forCellWithReuseIdentifier: TicketCarouselCell.identifier)
+        return cv
+    }()
 
-    // MARK: Init
+    private var didLayoutCards = false
+
+    // MARK: init
     override init(frame: CGRect) {
         super.init(frame: frame)
         setup()
@@ -38,63 +55,79 @@ final class TicketCarouselView: UIView, UIScrollViewDelegate {
         fatalError("init(coder:) has not been implemented")
     }
 
-    // MARK: Public
-    func configure(with tickets: [Ticket]) {
-        self.tickets = tickets
-        setNeedsLayout() // ⚠️ 이건 호출하되
-        DispatchQueue.main.async {
-            self.layoutCards() // view의 bounds가 설정된 이후 안전하게 호출
-        }
-    }
-
-    // MARK: UI Setup
     private func setup() {
-        addSubview(scrollView)
-        scrollView.delegate = self
+        addSubview(collectionView)
     }
 
     override func layoutSubviews() {
         super.layoutSubviews()
-        scrollView.pin.all()
+        collectionView.pin.all()
+
+        if collectionView.bounds.width > 0, !didLayoutCards {
+            updateLayout()
+            scrollToIndex(index: 0, animated: false)
+            didLayoutCards = true
+        }
     }
 
-    private func layoutCards() {
-        scrollView.subviews.forEach { $0.removeFromSuperview() }
-        cardViews.removeAll()
+    // MARK: Config
+    func configure(with tickets: [Ticket]) {
+        self.tickets = tickets
+        self.didLayoutCards = false
+        collectionView.reloadData()
+        setNeedsLayout()
+    }
 
-        let cardWidth = bounds.width * cardWidthRatio
-        let cardHeight = bounds.height * cardHeightRatio
-        let yOffset = (bounds.height - cardHeight) / 2
+    //MARK: CollectionView 레이아웃 관련
+    private func updateLayout() {
+        let cardHeight = bounds.height * 0.85
+        let cardWidth = cardHeight * 0.62
 
-        for (index, ticket) in tickets.enumerated() {
-            let cardView = TicketView(ticket: ticket)
-            cardView.frame = CGRect(
-                x: CGFloat(index) * (cardWidth + cardSpacing),
-                y: yOffset,
-                width: cardWidth,
-                height: cardHeight
-            )
-            cardView.layer.cornerRadius = 20
-            cardView.clipsToBounds = true
-            cardView.isUserInteractionEnabled = true
+        flowLayout.itemSize = CGSize(width: cardWidth, height: cardHeight)
 
-            let tap = UITapGestureRecognizer(target: self, action: #selector(handleCardTap(_:)))
-            cardView.addGestureRecognizer(tap)
+        let spacer = (bounds.width - cardWidth) / 2
+        collectionView.contentInset = UIEdgeInsets(top: 0, left: spacer, bottom: 0, right: spacer)
 
-            scrollView.addSubview(cardView)
-            cardViews.append(cardView)
+        collectionView.collectionViewLayout.invalidateLayout()
+        updateTransforms()
+    }
+
+    private func scrollToIndex(index: Int, animated: Bool) {
+        guard index >= 0, index < tickets.count else { return }
+
+        let indexPath = IndexPath(item: index, section: 0)
+        collectionView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: animated)
+        scrollCallback?(index)
+    }
+}
+
+// MARK: - UICollectionViewDataSource
+extension TicketCarouselView: UICollectionViewDataSource {
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return tickets.count
+    }
+
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        guard let cell = collectionView.dequeueReusableCell(
+            withReuseIdentifier: TicketCarouselCell.identifier,
+            for: indexPath
+        ) as? TicketCarouselCell else {
+            return UICollectionViewCell()
         }
 
-        scrollView.contentSize = CGSize(
-            width: CGFloat(tickets.count) * (cardWidth + cardSpacing),
-            height: bounds.height
-        )
+        let ticket = tickets[indexPath.item]
+        cell.configure(with: ticket)
+        return cell
+    }
+}
 
-        updateTransforms()
-        scrollToIndex(index: 0, animated: false)
+// MARK: - UICollectionViewDelegate
+extension TicketCarouselView: UICollectionViewDelegate {
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let ticket = tickets[indexPath.item]
+        onTicketTapped?(ticket)
     }
 
-    // MARK: Transform Logic
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         updateTransforms()
     }
@@ -109,41 +142,51 @@ final class TicketCarouselView: UIView, UIScrollViewDelegate {
         }
     }
 
+    func scrollViewWillEndDragging(_ scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
+        let cardHeight = bounds.height * 0.85
+        let cardWidth = cardHeight * 0.62
+        let totalWidth = cardWidth + cardSpacing
+
+        let centerOffset = targetContentOffset.pointee.x + bounds.width / 2
+
+        let index = round((centerOffset - collectionView.contentInset.left - cardWidth / 2) / totalWidth)
+        let clampedIndex = max(0, min(CGFloat(tickets.count - 1), index))
+
+        let targetX = clampedIndex * totalWidth + collectionView.contentInset.left + cardWidth / 2 - bounds.width / 2
+
+        targetContentOffset.pointee.x = targetX
+
+        scrollCallback?(Int(clampedIndex))
+    }
+
     private func updateTransforms() {
-        let centerX = scrollView.contentOffset.x + bounds.width / 2
+        let centerX = collectionView.bounds.midX
 
-        for cardView in cardViews {
-            let baseCenter = cardView.center.x
-            let distance = abs(centerX - baseCenter)
-            let maxDistance = bounds.width / 2 + cardView.bounds.width / 2
-            let scale = max(0.9, 1 - distance / maxDistance * 0.1)
-            let alpha = max(0.5, 1 - distance / maxDistance)
+        for cell in collectionView.visibleCells {
+            let cellCenter = collectionView.convert(cell.center, to: collectionView)
 
-            cardView.transform = CGAffineTransform(scaleX: scale, y: scale)
-            cardView.alpha = alpha
+            let distance = abs(centerX - cellCenter.x)
+            let maxDistance = bounds.width / 2 + cell.bounds.width / 2
+            let ratio = min(distance / maxDistance, 1)
+
+            let scale = 1 - ratio * 0.1
+            let alpha = 1 - ratio * 0.5
+
+            cell.transform = CGAffineTransform(scaleX: scale, y: scale)
+            cell.alpha = alpha
         }
     }
 
+
     private func snapToNearestCard() {
-        let cardWidth = bounds.width * cardWidthRatio
+        let cardHeight = bounds.height * 0.85
+        let cardWidth = cardHeight * 0.62
         let totalWidth = cardWidth + cardSpacing
-        let centerOffset = scrollView.contentOffset.x + bounds.width / 2
-        let index = Int(round((centerOffset - cardWidth / 2) / totalWidth))
-        scrollToIndex(index: index, animated: true)
-        scrollCallback?(index)
-    }
 
-    private func scrollToIndex(index: Int, animated: Bool) {
-        let cardWidth = bounds.width * cardWidthRatio
-        let targetX = CGFloat(index) * (cardWidth + cardSpacing) - (bounds.width - cardWidth) / 2
-        scrollView.setContentOffset(CGPoint(x: max(0, targetX), y: 0), animated: animated)
-    }
+        let centerOffset = collectionView.contentOffset.x + bounds.width / 2
+        let index = round((centerOffset - collectionView.contentInset.left - cardWidth / 2) / totalWidth)
+        let clampedIndex = Int(max(0, min(CGFloat(tickets.count - 1), index)))
 
-    // MARK: Card Tap Handler
-    @objc private func handleCardTap(_ gesture: UITapGestureRecognizer) {
-        guard let view = gesture.view as? TicketView,
-              let index = cardViews.firstIndex(of: view) else { return }
-        let ticket = tickets[index]
-        onCardTapped?(ticket)
+        scrollToIndex(index: clampedIndex, animated: true)
     }
 }

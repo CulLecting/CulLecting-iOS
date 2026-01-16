@@ -17,6 +17,11 @@ enum OnboardingStep {
     case category
 }
 
+enum OnboardingNavigationEvent {
+    case showFinishScreen
+    case completeOnboarding
+}
+
 protocol OnboardingViewModelProtocol {
     func transform(input: OnboardingViewModel.Input) -> OnboardingViewModel.Output
 }
@@ -30,16 +35,17 @@ final class OnboardingViewModel: OnboardingViewModelProtocol {
         let skipTrigger: Observable<Void>
         let tapCategory: Observable<String>
         let tapLocation: Observable<String>
+        let startTrigger: Observable<Void>
     }
-    
+
     struct Output {
         let currentStep: Observable<OnboardingStep>
         let selectedCategories: Observable<Set<String>>
         let selectedLocations: Observable<Set<String>>
         let enableNext: Observable<Bool>
-        let finish: Observable<Bool>
         let labelText: Observable<String>
         let progress: Observable<Float>
+        let navigationEvent: Observable<OnboardingNavigationEvent>
     }
     
     //MARK: 선언
@@ -47,8 +53,8 @@ final class OnboardingViewModel: OnboardingViewModelProtocol {
     private let currentStepRelay = BehaviorRelay<OnboardingStep>(value: .location)
     private let selectedCategoriesRelay = BehaviorRelay<Set<String>>(value: [])
     private let selectedLocationsRelay = BehaviorRelay<Set<String>>(value: [])
-    private let finishSubject = PublishSubject<Bool>()
     private let progressRelay = BehaviorRelay<Float>(value: 0.5)
+    private let navigationEventRelay = PublishRelay<OnboardingNavigationEvent>()
     
     //MARK: init
     private let useCase: OnboardingUseCaseProtocol
@@ -71,12 +77,12 @@ final class OnboardingViewModel: OnboardingViewModelProtocol {
                     }
                 case .category:
                     if self.selectedCategoriesRelay.value.count >= 1 {
-                        self.finishSubject.onNext(true)
+                        self.navigationEventRelay.accept(.showFinishScreen)
                     }
                 }
             })
             .disposed(by: disposeBag)
-        
+
         input.backTrigger
             .subscribe(onNext: { [weak self] in
                 guard let self = self else { return }
@@ -86,15 +92,25 @@ final class OnboardingViewModel: OnboardingViewModelProtocol {
                 }
             })
             .disposed(by: disposeBag)
-        
+
         input.skipTrigger
             .subscribe(onNext: { [weak self] in
                 guard let self else { return }
                 UserDefaults.standard.set(true, forKey: "hasSeenOnboarding")
-                self.finishSubject.onNext(true)
+                self.navigationEventRelay.accept(.showFinishScreen)
             })
             .disposed(by: disposeBag)
-        
+
+        input.startTrigger
+            .flatMapLatest { [weak self] _ -> Observable<Void> in
+                guard let self = self else { return .empty() }
+                return self.sendOnboardingData()
+            }
+            .subscribe(onNext: { [weak self] in
+                self?.navigationEventRelay.accept(.completeOnboarding)
+            })
+            .disposed(by: disposeBag)
+
         input.tapLocation
             .withLatestFrom(selectedLocationsRelay) { tapped, current in
                 var new = current
@@ -108,7 +124,7 @@ final class OnboardingViewModel: OnboardingViewModelProtocol {
             }
             .bind(to: selectedLocationsRelay)
             .disposed(by: disposeBag)
-        
+
         input.tapCategory
             .withLatestFrom(selectedCategoriesRelay) { tapped, current in
                 var new = current
@@ -121,7 +137,7 @@ final class OnboardingViewModel: OnboardingViewModelProtocol {
             }
             .bind(to: selectedCategoriesRelay)
             .disposed(by: disposeBag)
-        
+
         let enableNext = currentStepRelay.asObservable().flatMapLatest { step -> Observable<Bool> in
             switch step {
             case .location:
@@ -130,7 +146,7 @@ final class OnboardingViewModel: OnboardingViewModelProtocol {
                 return self.selectedCategoriesRelay.asObservable().map { $0.count >= 1 }
             }
         }
-        
+
         let labelText = currentStepRelay.asObservable().map { step in
             switch step {
             case .location:
@@ -139,31 +155,36 @@ final class OnboardingViewModel: OnboardingViewModelProtocol {
                 return "어떤 종류의 문화 콘텐츠를 좋아하세요?"
             }
         }
-        
+
         return Output(
             currentStep: currentStepRelay.asObservable(),
             selectedCategories: selectedCategoriesRelay.asObservable(),
             selectedLocations: selectedLocationsRelay.asObservable(),
             enableNext: enableNext,
-            finish: finishSubject.asObservable(),
             labelText: labelText,
-            progress: progressRelay.asObservable()
+            progress: progressRelay.asObservable(),
+            navigationEvent: navigationEventRelay.asObservable()
         )
     }
     
-    //MARK: 기타 메서드
-    func sendOnboardingData() {
+    private func sendOnboardingData() -> Observable<Void> {
+        print("sendOnboardingData() called")
+
         let locations = Array(selectedLocationsRelay.value)
         let categories = Array(selectedCategoriesRelay.value)
-        
-        useCase.updateOnboarding(location: locations, category: categories)
-            .subscribe(onCompleted: {
+
+        return useCase.updateOnboarding(
+                location: locations,
+                category: categories
+            )
+            .andThen(Observable.just(()))
+            .do(onCompleted: {
                 print("온보딩 데이터 서버 전송 완료")
                 UserDefaults.standard.set(true, forKey: "hasSeenOnboarding")
-                self.finishSubject.onNext(true)
-            }, onError: { error in
-                print("온보딩 데이터 전송 실패: \(error.localizedDescription)")
             })
-            .disposed(by: disposeBag)
+            .catch { error in
+                print("온보딩 데이터 전송 실패: \(error.localizedDescription)")
+                return .just(())
+            }
     }
 }

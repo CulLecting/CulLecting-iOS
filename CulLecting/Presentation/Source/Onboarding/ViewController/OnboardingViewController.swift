@@ -16,10 +16,10 @@ import Then
 
 
 class OnboardingViewController: UIViewController {
-    
-    var viewModel: OnboardingViewModel
+
+    private let viewModel: OnboardingViewModel
+    private weak var coordinator: OnboardingCoordinator?
     private let disposeBag = DisposeBag()
-    var onFinishTransition: (() -> Void)?
     
     //MARK: UI Components
     private let blackLogo = UIImageView().then {
@@ -54,6 +54,7 @@ class OnboardingViewController: UIViewController {
     
     private let stackButtonContainerView = UIView().then {
         $0.backgroundColor = .clear
+        $0.clipsToBounds = true
     }
     
     private let categoryView = OnboardingCategoryView()
@@ -72,8 +73,9 @@ class OnboardingViewController: UIViewController {
         bind()
     }
     
-    init(viewModel: OnboardingViewModel) {
+    init(viewModel: OnboardingViewModel, coordinator: OnboardingCoordinator) {
         self.viewModel = viewModel
+        self.coordinator = coordinator
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -102,11 +104,13 @@ class OnboardingViewController: UIViewController {
     
     // MARK: ViewModel Binding
     private func bindViewModel() {
-        let input = OnboardingViewModel.Input(nextTrigger: nextTrigger.asObservable(),
-                                              backTrigger: backTrigger.asObservable(),
-                                              skipTrigger: skipTrigger.asObservable(),
-                                              tapCategory: categoryButtonTapRelay.asObservable(),
-                                              tapLocation: locationButtonTapRelay.asObservable()
+        let input = OnboardingViewModel.Input(
+            nextTrigger: nextTrigger.asObservable(),
+            backTrigger: backTrigger.asObservable(),
+            skipTrigger: skipTrigger.asObservable(),
+            tapCategory: categoryButtonTapRelay.asObservable(),
+            tapLocation: locationButtonTapRelay.asObservable(),
+            startTrigger: .empty()  // OnboardingVC doesn't have start button
         )
         let output = viewModel.transform(input: input)
         
@@ -120,13 +124,13 @@ class OnboardingViewController: UIViewController {
                 case .location:
                     UIView.animate(withDuration: 0.3) {
                         self.locationView.frame = containerFrame
-                        self.categoryView.frame = containerFrame.offsetBy(dx: containerFrame.width + 40, dy: 0)
+                        self.categoryView.frame = containerFrame.offsetBy(dx: containerFrame.width + 10, dy: 0)
                     }
                     self.navigationItem.leftBarButtonItem = nil
                     
                 case .category:
                     UIView.animate(withDuration: 0.3) {
-                        self.locationView.frame = containerFrame.offsetBy(dx:(containerFrame.width + 40), dy: 0)
+                        self.locationView.frame = containerFrame.offsetBy(dx: -(containerFrame.width + 10), dy: 0)
                         self.categoryView.frame = containerFrame
                     }
                     self.navigationItem.leftBarButtonItem = self.backButton
@@ -176,13 +180,15 @@ class OnboardingViewController: UIViewController {
             })
             .disposed(by: disposeBag)
         
-        output.finish
+        output.navigationEvent
             .observe(on: MainScheduler.instance)
-            .subscribe(onNext: { [weak self] finished in
-                if finished {
+            .subscribe(onNext: { [weak self] event in
+                switch event {
+                case .showFinishScreen:
                     print("온보딩 완료 - OnboardingFinishedViewController로 전환")
-                    guard let self = self else { return }
-                    self.onFinishTransition?()
+                    self?.coordinator?.showOnboardingFinish()
+                case .completeOnboarding:
+                    break
                 }
             })
             .disposed(by: disposeBag)
