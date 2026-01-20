@@ -10,14 +10,9 @@ import Swinject
 struct MypageAssembly: Assembly {
 
     func assemble(container: Container) {
-        // Repository
-        container.register(AuthRepository.self) { _ in
-            AuthRepository()
-        }
-
-        // UseCase
+        // UseCase - Use AuthRepositoryProtocol to support mock injection
         container.register(MypageUseCase.self) { r in
-            let repository = r.resolve(AuthRepository.self)!
+            let repository = r.resolve(AuthRepositoryProtocol.self)!
             return MypageUseCase(authRepository: repository)
         }
 

@@ -9,15 +9,28 @@ import Swinject
 
 struct LoginAssembly: Assembly {
 
+    // Set to true to use mock authentication (test/1234)
+    static var useMockAuth: Bool = false
+
     func assemble(container: Container) {
-        // Repository
+        // Repository - Use Mock or Real based on configuration
+        container.register(AuthRepositoryProtocol.self) { _ in
+            if LoginAssembly.useMockAuth {
+                print("[DI] Using MockAuthRepository (test/1234)")
+                return MockAuthRepository()
+            } else {
+                return AuthRepository()
+            }
+        }.inObjectScope(.container)
+
+        // Keep AuthRepository registration for backward compatibility
         container.register(AuthRepository.self) { _ in
             AuthRepository()
         }.inObjectScope(.container)
 
-        // UseCase
+        // UseCase - Now uses AuthRepositoryProtocol
         container.register(AuthUseCase.self) { r in
-            let repository = r.resolve(AuthRepository.self)!
+            let repository = r.resolve(AuthRepositoryProtocol.self)!
             return AuthUseCase(repository: repository)
         }.inObjectScope(.container)
 

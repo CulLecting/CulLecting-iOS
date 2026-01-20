@@ -14,7 +14,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        // Enable mock authentication for simulator testing
+        #if targetEnvironment(simulator)
+        LoginAssembly.useMockAuth = true
+        print("[App] Running in Simulator - Mock Auth enabled (test/1234)")
+        #endif
+
         return true
     }
 

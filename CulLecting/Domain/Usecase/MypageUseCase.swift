@@ -32,9 +32,17 @@ final class MypageUseCase: MypageUseCaseProtocol {
 
     func logout() -> Completable {
         return authRepository.logout()
+            .do(onCompleted: {
+                TokenStorage.shared.clearAll()
+            })
     }
 
     func deleteAccount() -> Completable {
         return authRepository.deleteAccount()
+            .do(onCompleted: {
+                UserDefaults.standard.set(false, forKey: "hasSeenOnboarding")
+                UserDefaults.standard.synchronize()
+                TokenStorage.shared.clearAll()
+            })
     }
 }
