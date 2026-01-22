@@ -11,21 +11,11 @@ import Foundation
 extension Ticket {
     static let mockTickets: [Ticket] = [
         Ticket(
-            id: "1",
-            title: "서울시립교향악단 정기연주회",
-            description: "베토벤 교향곡 9번 '합창'",
-            date: "2025-01-20",
-            imageURL: "https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=400&h=600&fit=crop",
-            category: "클래식",
-            template: .black,
-            averageColorHex: "#2C2C2C"
-        ),
-        Ticket(
             id: "2",
-            title: "국립중앙박물관 특별전",
+            title: "예술의전당 오페라 <라 보엠>",
             description: "한국 미술의 정수를 담은 특별전시",
             date: "2025-01-15",
-            imageURL: "https://images.unsplash.com/photo-1569172122301-bc5008bc09c5?w=400&h=600&fit=crop",
+            imageURL: "https://images.unsplash.com/photo-1580809361436-42a7ec204889?w=600&h=400&fit=crop",
             category: "전시/미술",
             template: .floral,
             averageColorHex: "#8B7355"
@@ -41,21 +31,11 @@ extension Ticket {
             averageColorHex: "#4A90E2"
         ),
         Ticket(
-            id: "4",
-            title: "국립국악원 토요명품공연",
-            description: "전통국악의 아름다움",
-            date: "2025-01-25",
-            imageURL: "https://images.unsplash.com/photo-1460881680858-30d872d5b530?w=400&h=600&fit=crop",
-            category: "국악",
-            template: .white,
-            averageColorHex: "#F5F5F5"
-        ),
-        Ticket(
             id: "5",
             title: "예술의전당 서예전",
             description: "현대 서예의 흐름",
             date: "2025-02-10",
-            imageURL: "https://images.unsplash.com/photo-1561214115-f2f134cc4912?w=400&h=600&fit=crop",
+            imageURL: "https://images.unsplash.com/photo-1533158326339-7f3cf2404354?w=600&h=400&fit=crop",
             category: "전시/미술",
             template: .grid,
             averageColorHex: "#D4AF37"
@@ -65,14 +45,6 @@ extension Ticket {
 
 extension CulturalContentEntity {
     static let mockCulturalContents: [CulturalContentEntity] = [
-        CulturalContentEntity(
-            id: 1,
-            title: "서울시립미술관 기획전",
-            imageURL: "https://images.unsplash.com/photo-1578926288207-a90c5f3c1d86?w=600&h=400&fit=crop",
-            place: "서울시립미술관 서소문본관",
-            startDate: "2025-01-10",
-            endDate: "2025-03-30"
-        ),
         CulturalContentEntity(
             id: 2,
             title: "예술의전당 오페라 <라 보엠>",
