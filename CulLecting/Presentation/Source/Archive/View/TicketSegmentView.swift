@@ -15,10 +15,14 @@ import Then
 
 final class TicketSegmentView: UIView {
     var onTicketTapped: ((Ticket) -> Void)?
-    
+
+    // MARK: Configuration
+    // Change to .collectionView to use UICollectionView-based carousel
+    private static let carouselType: CarouselType = .scrollView
+
     // MARK: UI Components
     private let rootFlexContainer = UIView()
-    private let ticketView = TicketCarouselView()
+    private let ticketView: TicketCarouselViewProtocol = TicketCarouselFactory.make(type: carouselType)
     
     private let indexContainer = UIView().then {
         $0.backgroundColor = UIColor.grey20
