@@ -5,8 +5,6 @@
 //  Refactored to UICollectionView
 
 
-
-
 import UIKit
 
 import FlexLayout
@@ -14,7 +12,10 @@ import PinLayout
 import Then
 
 
-final class TicketCarouselView: UIView {
+// MARK: - Type Alias for backward compatibility
+typealias TicketCarouselView = TicketCarouselCollectionView
+
+final class TicketCarouselCollectionView: UIView, TicketCarouselViewProtocol {
 
     // MARK: Properties
     private var tickets: [Ticket] = []
